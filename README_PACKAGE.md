@@ -104,14 +104,14 @@ Extract Frame node information from Figma files
 ```python
 # Example: Extract tree structure
 {
-  "file_key": "5F45MIt6BVWBIZCEkA0do3",
+  "file_key": "your_figma_file_key_here",
   "node_ids": "1:498",
   "depth": 4
 }
 
 # Example: Download images
 {
-  "file_key": "5F45MIt6BVWBIZCEkA0do3",
+  "file_key": "your_figma_file_key_here",
   "node_ids": "1:498",
   "format": "png",
   "scale": 2.0

@@ -56,26 +56,26 @@ export FIGMA_ACCESS_TOKEN='your_token_here'
 2. 运行整合脚本：
 ```bash
 # 基本用法
-python3 get_complete_node_data.py 5F45MIt6BVWBIZCEkA0do3 1:498
+python3 get_complete_node_data.py your_figma_file_key_here 1:498
 
 # 指定图片格式和缩放
-python3 get_complete_node_data.py 5F45MIt6BVWBIZCEkA0do3 1:498 png 2
+python3 get_complete_node_data.py your_figma_file_key_here 1:498 png 2
 
 # 获取多个节点
-python3 get_complete_node_data.py 5F45MIt6BVWBIZCEkA0do3 1:498,1:703 png 1
+python3 get_complete_node_data.py your_figma_file_key_here 1:498,1:703 png 1
 ```
 
 ### 单独使用各个类
 
 ```bash
 # 提取Frame节点信息
-python3 figma_frame_extractor.py 5F45MIt6BVWBIZCEkA0do3
+python3 figma_frame_extractor.py your_figma_file_key_here
 
 # 提取树结构
-python3 figma_tree_extractor.py 5F45MIt6BVWBIZCEkA0do3 1:498
+python3 figma_tree_extractor.py your_figma_file_key_here 1:498
 
 # 下载图片
-python3 figma_image_extractor.py 5F45MIt6BVWBIZCEkA0do3 1:498 png 1
+python3 figma_image_extractor.py your_figma_file_key_here 1:498 png 1
 ```
 
 ### MCP服务器使用
@@ -101,7 +101,7 @@ python3 figma_image_extractor.py 5F45MIt6BVWBIZCEkA0do3 1:498 png 1
 
 ```
 === Figma 完整节点数据获取器 ===
-文件Key: 5F45MIt6BVWBIZCEkA0do3
+文件Key: your_figma_file_key_here
 节点IDs: 1:498
 图片格式: png
 缩放比例: 1.0
