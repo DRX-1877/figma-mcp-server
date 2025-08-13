@@ -8,8 +8,17 @@ import asyncio
 import json
 import os
 import sys
+import logging
 from typing import Any, Dict, List, Optional
 from pathlib import Path
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stderr
+)
+logger = logging.getLogger(__name__)
 
 # 导入我们的Figma工具类
 from .figma_tree_extractor import FigmaTreeExtractor
@@ -23,10 +32,6 @@ try:
     from mcp.server.models import InitializationOptions
     from mcp.server.stdio import stdio_server
     from mcp.types import (
-        CallToolRequest,
-        CallToolResult,
-        ListToolsRequest,
-        ListToolsResult,
         Tool,
         TextContent,
         ImageContent,
@@ -39,14 +44,145 @@ except ImportError:
 # 创建MCP服务器
 server = Server("figma-tools")
 
+# Define tool list
+FIGMA_TOOLS = [
+    {
+        "name": "extract_figma_tree",
+        "title": "Extract Figma Tree Structure",
+        "description": "Extract complete tree structure information of Figma nodes",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "file_key": {
+                    "type": "string",
+                    "description": "Unique identifier of the Figma file"
+                },
+                "node_ids": {
+                    "type": "string", 
+                    "description": "Node IDs, separated by commas. Use list_nodes_depth2 tool to get node IDs"
+                },
+                "depth": {
+                    "type": "integer",
+                    "description": "Tree structure depth, default 4",
+                    "default": 4
+                }
+            },
+            "required": ["file_key", "node_ids"]
+        }
+    },
+    {
+        "name": "download_figma_images",
+        "title": "Download Figma Images",
+        "description": "Download images of Figma nodes",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "file_key": {
+                    "type": "string",
+                    "description": "Unique identifier of the Figma file"
+                },
+                "node_ids": {
+                    "type": "string",
+                    "description": "Node IDs, separated by commas. Use list_nodes_depth2 tool to get node IDs"
+                },
+                "format": {
+                    "type": "string",
+                    "description": "Image format: png, jpg, svg, pdf",
+                    "default": "png"
+                },
+                "scale": {
+                    "type": "number",
+                    "description": "Scale ratio: 0.01-4",
+                    "default": 1.0
+                }
+            },
+            "required": ["file_key", "node_ids"]
+        }
+    },
+    {
+        "name": "get_complete_node_data",
+        "title": "Get Complete Node Data",
+        "description": "Get complete data of Figma nodes (tree structure + images) and organize into folders. Output structure designed for AI understanding: nodesinfo.json provides structured data, image files provide visual reference. ⚠️ Note: This tool will consume a lot of API quota, recommend using list_nodes_depth2 to get node IDs first",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "file_key": {
+                    "type": "string",
+                    "description": "Unique identifier of the Figma file"
+                },
+                "node_ids": {
+                    "type": "string",
+                    "description": "Node IDs, separated by commas. Use list_nodes_depth2 tool to get node IDs"
+                },
+                "image_format": {
+                    "type": "string",
+                    "description": "Image format: png, jpg, svg, pdf",
+                    "default": "png"
+                },
+                "image_scale": {
+                    "type": "number",
+                    "description": "Image scale ratio: 0.01-4",
+                    "default": 1.0
+                },
+                "tree_depth": {
+                    "type": "integer",
+                    "description": "Tree structure depth",
+                    "default": 4
+                }
+            },
+            "required": ["file_key", "node_ids"]
+        }
+    },
+    {
+        "name": "extract_frame_nodes",
+        "title": "Extract Frame Nodes",
+        "description": "Extract Frame node information from Figma file",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "file_key": {
+                    "type": "string",
+                    "description": "Unique identifier of the Figma file"
+                },
+                "max_depth": {
+                    "type": "integer",
+                    "description": "Maximum depth, default 2",
+                    "default": 2
+                }
+            },
+            "required": ["file_key"]
+        }
+    },
+    {
+        "name": "list_nodes_depth2",
+        "title": "List Nodes",
+        "description": "List all node IDs and names in Figma file (depth limited to 2), help users find needed nodes",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "file_key": {
+                    "type": "string",
+                    "description": "Unique identifier of the Figma file"
+                },
+                "node_types": {
+                    "type": "string",
+                    "description": "Node types to include, separated by commas (e.g.: FRAME,COMPONENT,TEXT), leave empty for all types",
+                    "default": ""
+                }
+            },
+            "required": ["file_key"]
+        }
+    }
+]
+
 class FigmaMCPServer:
     def __init__(self):
-        # 自动设置虚拟环境路径
+        # Auto-setup virtual environment path
         self.setup_environment()
         
         self.access_token = os.getenv("FIGMA_ACCESS_TOKEN")
         if not self.access_token:
-            print("警告: 未设置 FIGMA_ACCESS_TOKEN 环境变量")
+            print("Warning: FIGMA_ACCESS_TOKEN environment variable not set")
         
         self.tree_extractor = FigmaTreeExtractor(self.access_token) if self.access_token else None
         self.image_extractor = FigmaImageExtractor(self.access_token) if self.access_token else None
@@ -54,14 +190,14 @@ class FigmaMCPServer:
         self.node_lister = FigmaNodeLister(self.access_token) if self.access_token else None
     
     def setup_environment(self):
-        """设置环境，包括虚拟环境路径"""
-        # 获取当前脚本所在目录
+        """Setup environment, including virtual environment path"""
+        # Get current script directory
         script_dir = os.path.dirname(os.path.abspath(__file__))
         
-        # 检查虚拟环境是否存在
+        # Check if virtual environment exists
         venv_path = os.path.join(script_dir, "figma_env")
         if os.path.exists(venv_path):
-            # 添加虚拟环境的site-packages到Python路径
+            # Add virtual environment site-packages to Python path
             if sys.platform == "win32":
                 site_packages = os.path.join(venv_path, "Lib", "site-packages")
             else:
@@ -69,14 +205,13 @@ class FigmaMCPServer:
             
             if os.path.exists(site_packages):
                 sys.path.insert(0, site_packages)
-                print(f"已添加虚拟环境路径: {site_packages}")
         
-        # 添加当前目录到Python路径
+        # Add current directory to Python path
         if script_dir not in sys.path:
             sys.path.insert(0, script_dir)
     
     def get_node_name(self, tree_data: Dict[str, Any], node_id: str) -> str:
-        """从树结构数据中获取节点名称"""
+        """Get node name from tree structure data"""
         try:
             if "nodes" in tree_data and node_id in tree_data["nodes"]:
                 node_name = tree_data["nodes"][node_id].get("name", "")
@@ -86,10 +221,10 @@ class FigmaMCPServer:
             return f"node_{node_id.replace(':', '_')}"
     
     def organize_files(self, file_key: str, node_ids: str, node_name: str, tree_result: Dict, image_result: Dict) -> Dict[str, Any]:
-        """整理文件到指定文件夹"""
+        """Organize files to specified folder"""
         import shutil
         
-        # 创建目标文件夹
+        # Create target folder
         first_node_id = node_ids.split(",")[0]
         target_dir = f"{node_name}_{first_node_id}"
         os.makedirs(target_dir, exist_ok=True)
@@ -99,17 +234,17 @@ class FigmaMCPServer:
             "files": {}
         }
         
-        # 保存树结构文件
+        # Save tree structure file
         tree_file = f"{target_dir}/nodesinfo.json"
         with open(tree_file, 'w', encoding='utf-8') as f:
             json.dump(tree_result, f, indent=2, ensure_ascii=False)
         result["files"]["nodesinfo"] = tree_file
         
-        # 处理图片文件
+        # Process image files
         if image_result and "images" in image_result:
             for node_id, image_info in image_result["images"].items():
                 if image_info.get("status") == "success" and image_info.get("filename"):
-                    # 移动图片文件到目标目录
+                    # Move image file to target directory
                     old_path = image_info["filename"]
                     new_path = f"{target_dir}/{node_id}.{image_result.get('format', 'png')}"
                     if os.path.exists(old_path):
@@ -118,142 +253,32 @@ class FigmaMCPServer:
         
         return result
 
-# 创建Figma MCP服务器实例
-figma_server = FigmaMCPServer()
+# 创建Figma MCP服务器实例（延迟初始化）
+figma_server = None
+
+def get_figma_server():
+    """Get Figma server instance (lazy initialization)"""
+    global figma_server
+    if figma_server is None:
+        figma_server = FigmaMCPServer()
+    return figma_server
 
 @server.list_tools()
-async def handle_list_tools() -> ListToolsResult:
-    """列出可用的工具"""
-    return ListToolsResult(
-        tools=[
-            Tool(
-                name="extract_figma_tree",
-                description="提取Figma节点的完整树结构信息",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "file_key": {
-                            "type": "string",
-                            "description": "Figma文件的唯一标识符"
-                        },
-                        "node_ids": {
-                            "type": "string", 
-                            "description": "节点ID，多个用逗号分隔。使用 list_nodes_depth2 工具获取节点ID"
-                        },
-                        "depth": {
-                            "type": "integer",
-                            "description": "树结构深度，默认4",
-                            "default": 4
-                        }
-                    },
-                    "required": ["file_key", "node_ids"]
-                }
-            ),
-            Tool(
-                name="download_figma_images",
-                description="下载Figma节点的图片",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "file_key": {
-                            "type": "string",
-                            "description": "Figma文件的唯一标识符"
-                        },
-                        "node_ids": {
-                            "type": "string",
-                            "description": "节点ID，多个用逗号分隔。使用 list_nodes_depth2 工具获取节点ID"
-                        },
-                        "format": {
-                            "type": "string",
-                            "description": "图片格式：png, jpg, svg, pdf",
-                            "default": "png"
-                        },
-                        "scale": {
-                            "type": "number",
-                            "description": "缩放比例：0.01-4",
-                            "default": 1.0
-                        }
-                    },
-                    "required": ["file_key", "node_ids"]
-                }
-            ),
-            Tool(
-                name="get_complete_node_data",
-                description="获取Figma节点的完整数据（树结构+图片），并整理到文件夹。输出结构专为AI理解设计：nodesinfo.json提供结构化数据，图片文件提供视觉参考。⚠️ 注意：此工具会消耗大量API配额，建议先使用list_nodes_depth2获取节点ID",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "file_key": {
-                            "type": "string",
-                            "description": "Figma文件的唯一标识符"
-                        },
-                        "node_ids": {
-                            "type": "string",
-                            "description": "节点ID，多个用逗号分隔。使用 list_nodes_depth2 工具获取节点ID"
-                        },
-                        "image_format": {
-                            "type": "string",
-                            "description": "图片格式：png, jpg, svg, pdf",
-                            "default": "png"
-                        },
-                        "image_scale": {
-                            "type": "number",
-                            "description": "图片缩放比例：0.01-4",
-                            "default": 1.0
-                        },
-                        "tree_depth": {
-                            "type": "integer",
-                            "description": "树结构深度",
-                            "default": 4
-                        }
-                    },
-                    "required": ["file_key", "node_ids"]
-                }
-            ),
-            Tool(
-                name="extract_frame_nodes",
-                description="提取Figma文件中的Frame节点信息",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "file_key": {
-                            "type": "string",
-                            "description": "Figma文件的唯一标识符"
-                        },
-                        "max_depth": {
-                            "type": "integer",
-                            "description": "最大深度，默认2",
-                            "default": 2
-                        }
-                    },
-                    "required": ["file_key"]
-                }
-            ),
-            Tool(
-                name="list_nodes_depth2",
-                description="列出Figma文件中所有节点的ID和名称（深度限制为2），帮助用户找到需要的节点",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "file_key": {
-                            "type": "string",
-                            "description": "Figma文件的唯一标识符"
-                        },
-                        "node_types": {
-                            "type": "string",
-                            "description": "要包含的节点类型，用逗号分隔（如：FRAME,COMPONENT,TEXT），留空表示所有类型",
-                            "default": ""
-                        }
-                    },
-                    "required": ["file_key"]
-                }
-            )
-        ]
-    )
+async def handle_list_tools() -> list[Tool]:
+    """List available tools"""
+    try:
+        tools = []
+        for tool_def in FIGMA_TOOLS:
+            tools.append(Tool(**tool_def))
+        
+        return tools
+    except Exception as e:
+        logger.error(f"handle_list_tools error: {e}")
+        raise
 
 @server.call_tool()
-async def handle_call_tool(name: str, arguments: Dict[str, Any]) -> CallToolResult:
-    """处理工具调用"""
+async def handle_call_tool(name: str, arguments: Dict[str, Any]) -> list[TextContent | ImageContent]:
+    """Handle tool calls"""
     try:
         if name == "extract_figma_tree":
             return await handle_extract_tree(arguments)
@@ -266,202 +291,184 @@ async def handle_call_tool(name: str, arguments: Dict[str, Any]) -> CallToolResu
         elif name == "list_nodes_depth2":
             return await handle_list_nodes(arguments)
         else:
-            return CallToolResult(
-                content=[TextContent(type="text", text=f"未知工具: {name}")]
-            )
+            logger.warning(f"Unknown tool: {name}")
+            return [TextContent(type="text", text=f"Unknown tool: {name}")]
     except Exception as e:
-        return CallToolResult(
-            content=[TextContent(type="text", text=f"执行工具时出错: {str(e)}")]
-        )
+        logger.error(f"handle_call_tool error: {e}")
+        return [TextContent(type="text", text=f"Error executing tool: {str(e)}")]
 
-async def handle_extract_tree(arguments: Dict[str, Any]) -> CallToolResult:
-    """处理树结构提取"""
+async def handle_extract_tree(arguments: Dict[str, Any]) -> list[TextContent]:
+    """Handle tree structure extraction"""
     file_key = arguments["file_key"]
     node_ids = arguments["node_ids"]
     depth = arguments.get("depth", 4)
     
+    figma_server = get_figma_server()
     if not figma_server.tree_extractor:
-        return CallToolResult(
-            content=[TextContent(type="text", text="错误: 未设置 FIGMA_ACCESS_TOKEN")]
-        )
+        return [TextContent(type="text", text="Error: FIGMA_ACCESS_TOKEN not set")]
     
     result = figma_server.tree_extractor.extract_tree(file_key, node_ids, depth)
     if not result:
-        return CallToolResult(
-            content=[TextContent(type="text", text="提取树结构失败")]
-        )
+        return [TextContent(type="text", text="Failed to extract tree structure")]
     
-    # 保存到文件
+    # Save to file
     output_file = f"specific_nodes_{file_key}.json"
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
     
-    return CallToolResult(
-        content=[
-            TextContent(
-                type="text", 
-                text=f"✅ 树结构提取成功！\n\n文件: {output_file}\n总节点数: {result['analysis']['total_nodes']}\n节点类型统计: {json.dumps(result['analysis']['node_counts'], ensure_ascii=False, indent=2)}"
-            )
-        ]
-    )
+    return [
+        TextContent(
+            type="text", 
+            text=f"✅ Tree structure extraction successful!\n\nFile: {output_file}\nTotal nodes: {result['analysis']['total_nodes']}\nNode type statistics: {json.dumps(result['analysis']['node_counts'], ensure_ascii=False, indent=2)}"
+        )
+    ]
 
-async def handle_download_images(arguments: Dict[str, Any]) -> CallToolResult:
-    """处理图片下载"""
+async def handle_download_images(arguments: Dict[str, Any]) -> list[TextContent]:
+    """Handle image download"""
     file_key = arguments["file_key"]
     node_ids = arguments["node_ids"]
     format = arguments.get("format", "png")
     scale = arguments.get("scale", 1.0)
     
+    figma_server = get_figma_server()
     if not figma_server.image_extractor:
-        return CallToolResult(
-            content=[TextContent(type="text", text="错误: 未设置 FIGMA_ACCESS_TOKEN")]
-        )
+        return [TextContent(type="text", text="Error: FIGMA_ACCESS_TOKEN not set")]
     
     result = figma_server.image_extractor.extract_images(file_key, node_ids, format, scale)
     if not result:
-        return CallToolResult(
-            content=[TextContent(type="text", text="下载图片失败")]
-        )
+        return [TextContent(type="text", text="Failed to download images")]
     
     success_count = sum(1 for img in result["images"].values() if img.get("status") == "success")
     total_count = len(result["images"])
     
-    return CallToolResult(
-        content=[
-            TextContent(
-                type="text", 
-                text=f"✅ 图片下载完成！\n\n成功下载: {success_count}/{total_count} 个图片\n格式: {format}\n缩放: {scale}\n图片保存在: images_{file_key}/"
-            )
-        ]
-    )
+    return [
+        TextContent(
+            type="text", 
+            text=f"✅ Image download completed!\n\nSuccessfully downloaded: {success_count}/{total_count} images\nFormat: {format}\nScale: {scale}\nImages saved in: images_{file_key}/"
+        )
+    ]
 
-async def handle_complete_data(arguments: Dict[str, Any]) -> CallToolResult:
-    """处理完整数据获取"""
+async def handle_complete_data(arguments: Dict[str, Any]) -> list[TextContent]:
+    """Handle complete data retrieval"""
     file_key = arguments["file_key"]
     node_ids = arguments["node_ids"]
     image_format = arguments.get("image_format", "png")
     image_scale = arguments.get("image_scale", 1.0)
     tree_depth = arguments.get("tree_depth", 4)
     
+    figma_server = get_figma_server()
     if not figma_server.tree_extractor or not figma_server.image_extractor:
-        return CallToolResult(
-            content=[TextContent(type="text", text="错误: 未设置 FIGMA_ACCESS_TOKEN")]
-        )
+        return [TextContent(type="text", text="Error: FIGMA_ACCESS_TOKEN not set")]
     
-    # 步骤1: 获取树结构
+    # Step 1: Get tree structure
     tree_result = figma_server.tree_extractor.extract_tree(file_key, node_ids, tree_depth)
     if not tree_result:
-        return CallToolResult(
-            content=[TextContent(type="text", text="获取树结构失败")]
-        )
+        return [TextContent(type="text", text="Failed to get tree structure")]
     
-    # 步骤2: 获取节点名称
+    # Step 2: Get node name
     first_node_id = node_ids.split(",")[0]
     node_name = figma_server.get_node_name(tree_result, first_node_id)
     
-    # 步骤3: 下载图片
+    # Step 3: Download images
     image_result = figma_server.image_extractor.extract_images(file_key, node_ids, image_format, image_scale)
     if not image_result:
-        return CallToolResult(
-            content=[TextContent(type="text", text="下载图片失败")]
-        )
+        return [TextContent(type="text", text="Failed to download images")]
     
-    # 步骤4: 整理文件
+    # Step 4: Organize files
     organize_result = figma_server.organize_files(file_key, node_ids, node_name, tree_result, image_result)
     
-    return CallToolResult(
-        content=[
-            TextContent(
-                type="text", 
-                text=f"✅ 完整数据获取成功！\n\n📁 输出文件夹: {organize_result['target_dir']}\n📊 总节点数: {tree_result['analysis']['total_nodes']}\n🖼️ 图片格式: {image_format}\n📏 缩放比例: {image_scale}\n\n包含文件:\n- nodesinfo.json (节点详细信息)\n- nodesstatus.json (节点统计信息)\n- image.json (图片信息)\n- summary.json (汇总信息)\n- 图片文件"
-            )
-        ]
-    )
+    return [
+        TextContent(
+            type="text", 
+            text=f"✅ Complete data retrieval successful!\n\n📁 Output folder: {organize_result['target_dir']}\n📊 Total nodes: {tree_result['analysis']['total_nodes']}\n🖼️ Image format: {image_format}\n📏 Scale ratio: {image_scale}\n\nIncluded files:\n- nodesinfo.json (node details)\n- nodesstatus.json (node statistics)\n- image.json (image information)\n- summary.json (summary information)\n- Image files"
+        )
+    ]
 
-async def handle_extract_frames(arguments: Dict[str, Any]) -> CallToolResult:
-    """处理Frame节点提取"""
+async def handle_extract_frames(arguments: Dict[str, Any]) -> list[TextContent]:
+    """Handle Frame node extraction"""
     file_key = arguments["file_key"]
     max_depth = arguments.get("max_depth", 2)
     
+    figma_server = get_figma_server()
     if not figma_server.frame_extractor:
-        return CallToolResult(
-            content=[TextContent(type="text", text="错误: 未设置 FIGMA_ACCESS_TOKEN")]
-        )
+        return [TextContent(type="text", text="Error: FIGMA_ACCESS_TOKEN not set")]
     
     result = figma_server.frame_extractor.extract_frames(file_key, max_depth)
     if not result:
-        return CallToolResult(
-            content=[TextContent(type="text", text="提取Frame节点失败")]
-        )
+        return [TextContent(type="text", text="Failed to extract Frame nodes")]
     
     frame_count = len(result["pages"])
     frame_ids = [page["pageInfo"]["frameId"] for page in result["pages"]]
     
-    return CallToolResult(
-        content=[
-            TextContent(
-                type="text", 
-                text=f"✅ Frame节点提取成功！\n\n找到 {frame_count} 个Frame节点 (depth={max_depth}):\n" + "\n".join([f"- {page['pageInfo']['name']} (ID: {page['pageInfo']['frameId']})" for page in result["pages"]])
-            )
-        ]
-    )
+    return [
+        TextContent(
+            type="text", 
+            text=f"✅ Frame node extraction successful!\n\nFound {frame_count} Frame nodes (depth={max_depth}):\n" + "\n".join([f"- {page['pageInfo']['name']} (ID: {page['pageInfo']['frameId']})" for page in result["pages"]])
+        )
+    ]
 
-async def handle_list_nodes(arguments: Dict[str, Any]) -> CallToolResult:
-    """处理节点列表获取"""
+async def handle_list_nodes(arguments: Dict[str, Any]) -> list[TextContent]:
+    """Handle node list retrieval"""
     file_key = arguments["file_key"]
     node_types = arguments.get("node_types", "")
     
+    figma_server = get_figma_server()
     if not figma_server.node_lister:
-        return CallToolResult(
-            content=[TextContent(type="text", text="错误: 未设置 FIGMA_ACCESS_TOKEN")]
-        )
+        return [TextContent(type="text", text="Error: FIGMA_ACCESS_TOKEN not set")]
     
     result = figma_server.node_lister.list_nodes(file_key, node_types, max_depth=2)
     if not result:
-        return CallToolResult(
-            content=[TextContent(type="text", text="获取节点列表失败")]
-        )
+        return [TextContent(type="text", text="Failed to get node list")]
     
-    # 构建输出文本
-    output_lines = [f"✅ 节点列表获取成功！\n"]
-    output_lines.append(f"文件: {result['file_name']}")
-    output_lines.append(f"总节点数: {result['total_nodes']} (depth=2)")
+    # Build output text
+    output_lines = [f"✅ Node list retrieval successful!\n"]
+    output_lines.append(f"File: {result['file_name']}")
+    output_lines.append(f"Total nodes: {result['total_nodes']} (depth=2)")
     
     if node_types:
-        output_lines.append(f"过滤类型: {node_types}")
+        output_lines.append(f"Filtered types: {node_types}")
     
-    output_lines.append("\n📋 节点列表:")
+    output_lines.append("\n📋 Node list:")
     
-    # 按类型输出节点
+    # Output nodes by type
     for node_type, nodes in result["nodes_by_type"].items():
-        output_lines.append(f"\n📁 {node_type} ({len(nodes)} 个):")
+        output_lines.append(f"\n📁 {node_type} ({len(nodes)} items):")
         for node in nodes:
             indent = "  " * node["depth"]
             output_lines.append(f"{indent}- {node['name']} (ID: {node['id']})")
     
-    return CallToolResult(
-        content=[
-            TextContent(
-                type="text", 
-                text="\n".join(output_lines)
-            )
-        ]
-    )
+    return [
+        TextContent(
+            type="text", 
+            text="\n".join(output_lines)
+        )
+    ]
 
 async def main():
-    """主函数"""
-    # 检查环境变量
-    if not os.getenv("FIGMA_ACCESS_TOKEN"):
-        print("警告: 未设置 FIGMA_ACCESS_TOKEN 环境变量")
-        print("请设置: export FIGMA_ACCESS_TOKEN='your_token_here'")
+    """Main function"""
+    logger.info("Figma MCP server starting")
     
-    # 启动MCP服务器
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream,
-            write_stream,
-            server.create_initialization_options(),
-        )
+    # Check environment variables
+    if not os.getenv("FIGMA_ACCESS_TOKEN"):
+        logger.warning("FIGMA_ACCESS_TOKEN not set")
+        print("Warning: FIGMA_ACCESS_TOKEN environment variable not set")
+        print("Please set: export FIGMA_ACCESS_TOKEN='your_token_here'")
+    else:
+        logger.info("FIGMA_ACCESS_TOKEN is set")
+    
+    init_options = server.create_initialization_options()
+    
+    # Start MCP server
+    try:
+        async with stdio_server() as (read_stream, write_stream):
+            await server.run(
+                read_stream,
+                write_stream,
+                init_options,
+            )
+    except Exception as e:
+        logger.error(f"Server error: {e}")
+        raise
 
 if __name__ == "__main__":
     asyncio.run(main())

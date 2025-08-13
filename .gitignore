@@ -26,6 +26,7 @@ venv/
 env/
 ENV/
 figma_env/
+figma-mcp-env/
 test_env/
 
 # IDE

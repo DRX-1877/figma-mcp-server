@@ -62,72 +62,123 @@
 3. **设计到代码**：从Figma设计直接转换为生产代码
 4. **质量保证**：设计实现之间的视觉比较
 
-## 安装
+## 🚀 快速安装
+
+### 方法一：使用安装脚本（推荐）
+
+**macOS/Linux:**
+```bash
+# 克隆项目
+git clone https://github.com/DRX-1877/figma-mcp-server.git
+cd figma-mcp-server
+
+# 运行安装脚本
+./install.sh
+```
+
+**Windows:**
+```cmd
+# 克隆项目
+git clone https://github.com/DRX-1877/figma-mcp-server.git
+cd figma-mcp-server
+
+# 运行安装脚本
+install.bat
+```
+
+### 方法二：手动安装
 
 1. 创建并激活虚拟环境：
 ```bash
-python3.10 -m venv figma_env
-source figma_env/bin/activate
+python3 -m venv figma-mcp-env
+source figma-mcp-env/bin/activate  # macOS/Linux
+# 或
+figma-mcp-env\Scripts\activate     # Windows
 ```
 
-2. 安装依赖：
+2. 安装项目：
 ```bash
-pip install --upgrade pip
-pip install requests
-pip install git+https://github.com/modelcontextprotocol/python-sdk.git
+pip install -e .
 ```
 
-3. 获取Figma Access Token：
-   - 登录Figma
-   - 进入Settings > Account > Personal access tokens
-   - 创建新的access token
+### 获取 Figma Access Token
 
-## 使用方法
+1. 访问 [Figma Settings > Account > Personal access tokens](https://www.figma.com/settings)
+2. 创建新的访问令牌
+3. 复制令牌
 
-### 主要使用方式（推荐）
+### 设置环境变量
 
-1. 设置环境变量：
+**macOS/Linux:**
 ```bash
 export FIGMA_ACCESS_TOKEN='your_token_here'
 ```
 
-2. 运行整合脚本：
-```bash
-# 基本用法
-python3 get_complete_node_data.py your_figma_file_key_here your_node_id_here
-
-# 指定图片格式和缩放
-python3 get_complete_node_data.py your_figma_file_key_here your_node_id_here png 2
-
-# 获取多个节点
-python3 get_complete_node_data.py your_figma_file_key_here your_node_id_here,your_second_node_id_here png 1
+**Windows:**
+```cmd
+set FIGMA_ACCESS_TOKEN=your_token_here
 ```
 
-### 单独使用各个类
+## 🎯 使用方法
 
+### 快速启动
+
+**使用启动脚本：**
 ```bash
-# 提取Frame节点信息
-python3 figma_frame_extractor.py your_figma_file_key_here
-
-# 提取树结构
-python3 figma_tree_extractor.py your_figma_file_key_here your_node_id_here
-
-# 下载图片
-python3 figma_image_extractor.py your_figma_file_key_here your_node_id_here png 1
+./start.sh
 ```
 
-### MCP服务器使用
-
-1. 启动MCP服务器：
+**手动启动：**
 ```bash
-./start_mcp_server.sh
+# 激活虚拟环境
+source figma-mcp-env/bin/activate  # macOS/Linux
+# 或
+figma-mcp-env\Scripts\activate     # Windows
+
+# 启动服务器
+figma-mcp-server
 ```
 
-2. 在支持MCP的AI助手中配置：
-   - 服务器名称：`figma-tools`
-   - 命令：`python3`
-   - 参数：`figma_mcp_server.py`
-   - 环境变量：`FIGMA_ACCESS_TOKEN`
+### MCP 配置（可选）
+
+如果您使用 Cursor 或其他支持 MCP 的编辑器，可以添加到配置文件：
+
+```json
+{
+  "mcpServers": {
+    "figma-tools": {
+      "command": "figma-mcp-env/bin/figma-mcp-server",
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+### 命令行使用
+
+```bash
+# 查看帮助
+figma-mcp-server --help
+
+# 列出节点
+figma-mcp-server list-nodes your_file_key
+
+# 提取完整数据
+figma-mcp-server extract your_file_key your_node_id
+```
+
+### 主要功能：完整节点数据提取
+
+### get_complete_node_data ⭐ **主要工具**
+获取Figma节点的完整数据（树结构+图片），并整理到文件夹
+
+⚠️ **重要提醒：API Token使用警告**
+- 完整节点数据提取会消耗大量API配额
+- 每个节点的完整信息可能包含数千个字段，数据量很大
+- 建议先使用 `list_nodes_depth2` 工具识别需要的节点
+- 这种两步式流程有助于最小化API成本和处理时间
 
 ## 主要功能：完整节点数据提取
 
