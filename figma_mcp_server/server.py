@@ -400,10 +400,24 @@ async def handle_extract_frames(arguments: Dict[str, Any]) -> list[TextContent]:
     frame_count = len(result["pages"])
     frame_ids = [page["pageInfo"]["frameId"] for page in result["pages"]]
     
+    # Save detailed result to file
+    output_file = f"detailed_frame_info_{file_key}.json"
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(result, f, indent=2, ensure_ascii=False)
+    
+    # Save simplified frame IDs to file
+    simple_output_file = f"frame_ids_{file_key}.json"
+    with open(simple_output_file, 'w', encoding='utf-8') as f:
+        json.dump({
+            "file_key": file_key,
+            "frame_ids": frame_ids,
+            "count": len(frame_ids)
+        }, f, indent=2, ensure_ascii=False)
+    
     return [
         TextContent(
             type="text", 
-            text=f"✅ Frame node extraction successful!\n\nFound {frame_count} Frame nodes (depth={max_depth}):\n" + "\n".join([f"- {page['pageInfo']['name']} (ID: {page['pageInfo']['frameId']})" for page in result["pages"]])
+            text=f"✅ Frame node extraction successful!\n\nFound {frame_count} Frame nodes (depth={max_depth}):\n" + "\n".join([f"- {page['pageInfo']['name']} (ID: {page['pageInfo']['frameId']})" for page in result["pages"]]) + f"\n\n📁 Detailed result saved to: {output_file}\n📁 Simplified result saved to: {simple_output_file}"
         )
     ]
 
@@ -419,6 +433,22 @@ async def handle_list_nodes(arguments: Dict[str, Any]) -> list[TextContent]:
     result = figma_server.node_lister.list_nodes(file_key, node_types, max_depth=2)
     if not result:
         return [TextContent(type="text", text="Failed to get node list")]
+    
+    # Save detailed result to file
+    output_file = f"node_list_{file_key}.json"
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(result, f, indent=2, ensure_ascii=False)
+    
+    # Save simplified node IDs to file
+    node_ids = [node["id"] for node in result["node_list"]]
+    simple_output_file = f"node_ids_{file_key}.json"
+    with open(simple_output_file, 'w', encoding='utf-8') as f:
+        json.dump({
+            "file_key": file_key,
+            "node_ids": node_ids,
+            "count": len(node_ids),
+            "max_depth": 2
+        }, f, indent=2, ensure_ascii=False)
     
     # Build output text
     output_lines = [f"✅ Node list retrieval successful!\n"]
@@ -436,6 +466,9 @@ async def handle_list_nodes(arguments: Dict[str, Any]) -> list[TextContent]:
         for node in nodes:
             indent = "  " * node["depth"]
             output_lines.append(f"{indent}- {node['name']} (ID: {node['id']})")
+    
+    output_lines.append(f"\n📁 Detailed result saved to: {output_file}")
+    output_lines.append(f"📁 Simplified result saved to: {simple_output_file}")
     
     return [
         TextContent(

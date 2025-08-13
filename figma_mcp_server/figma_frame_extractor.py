@@ -95,8 +95,8 @@ class FigmaFrameExtractor:
         """创建页面信息"""
         return {
             "pageInfo": {
-                "name": file_data.get("name", ""),
-                "english": file_data.get("name", ""),  # 可以根据需要翻译
+                "name": document.get("name", ""),
+                "english": document.get("name", ""),  # 可以根据需要翻译
                 "frameId": document.get("id", ""),
                 "type": document.get("type", ""),
                 "devStatus": "READY_FOR_DEV"  # 可以根据需要设置
@@ -237,7 +237,7 @@ def main():
             print(f"\n详细结果已保存到: {output_file}")
             
             # 同时保存简化的frame id列表
-            frame_ids = [node["id"] for node in result["pages"]]
+            frame_ids = [node["pageInfo"]["frameId"] for node in result["pages"]]
             simple_output_file = f"frame_ids_{file_key}.json"
             with open(simple_output_file, 'w', encoding='utf-8') as f:
                 json.dump({
