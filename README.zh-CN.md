@@ -322,11 +322,12 @@ figma-mcp-tools extract your_file_key your_node_id
 
 如需特定功能，也可以单独调用以下工具：
 
-3. 可用的MCP工具：
-   - `extract_figma_tree` - 提取节点树结构
-   - `download_figma_images` - 下载节点图片
-   - `get_complete_node_data` ⭐ **主要工具** - 获取完整节点数据
-   - `extract_frame_nodes` - 提取Frame节点
+可用的MCP工具：
+1. **`list_nodes_depth2`** - 列出Figma文件中的所有节点（深度限制为2）
+2. **`extract_figma_tree`** - 提取节点树结构
+3. **`download_figma_images`** - 下载节点图片
+4. **`get_complete_node_data`** ⭐ **主要工具** - 获取完整节点数据
+5. **`extract_frame_nodes`** - 提取Frame节点
 
 ## 输出示例
 
@@ -370,6 +371,10 @@ your_node_name_your_node_id_here/
 - `tree_depth` - 树结构深度（可选，默认4）
 
 ### 单独工具参数
+
+#### list_nodes_depth2
+- `file_key` - Figma文件唯一标识符（必需）
+- `node_types` - 节点类型过滤，逗号分隔（可选，如：FRAME,COMPONENT,TEXT）
 
 #### extract_figma_tree
 - `file_key` - Figma文件唯一标识符
