@@ -98,26 +98,81 @@ if errorlevel 1 (
     echo     PATH already configured
 )
 
-REM 创建全局符号链接
+REM 创建全局符号链接（改进版本）
 echo 🔗 创建全局符号链接
 echo     Creating global symlink...
+
+REM 尝试多个全局目录
+set "CREATED_SYMLINK=false"
+
+REM 尝试 %USERPROFILE%\AppData\Local\Microsoft\WinGet\Packages
 set "GLOBAL_BIN_DIR=%USERPROFILE%\AppData\Local\Microsoft\WinGet\Packages"
+if not exist "%GLOBAL_BIN_DIR%" mkdir "%GLOBAL_BIN_DIR%" >nul 2>&1
 
 REM 尝试创建符号链接
 mklink "%GLOBAL_BIN_DIR%\figma-mcp-server.exe" "%VENV_BIN_DIR%\figma-mcp-server.exe" >nul 2>&1
-if errorlevel 1 (
-    REM 如果失败，尝试复制文件
-    copy "%VENV_BIN_DIR%\figma-mcp-server.exe" "%GLOBAL_BIN_DIR%\figma-mcp-server.exe" >nul 2>&1
-    if errorlevel 1 (
-        echo ⚠️  无法创建全局符号链接，请手动配置
-        echo     Failed to create global symlink, please configure manually
-    ) else (
-        echo ✅ 已复制到全局目录: %GLOBAL_BIN_DIR%\figma-mcp-server.exe
-        echo     Copied to global directory: %GLOBAL_BIN_DIR%\figma-mcp-server.exe
-    )
-) else (
+if not errorlevel 1 (
     echo ✅ 已创建全局符号链接: %GLOBAL_BIN_DIR%\figma-mcp-server.exe
     echo     Global symlink created: %GLOBAL_BIN_DIR%\figma-mcp-server.exe
+    set "CREATED_SYMLINK=true"
+    goto :symlink_created
+)
+
+REM 尝试 %USERPROFILE%\AppData\Local\Programs\Microsoft VS Code\bin
+set "GLOBAL_BIN_DIR=%USERPROFILE%\AppData\Local\Programs\Microsoft VS Code\bin"
+if exist "%GLOBAL_BIN_DIR%" (
+    mklink "%GLOBAL_BIN_DIR%\figma-mcp-server.exe" "%VENV_BIN_DIR%\figma-mcp-server.exe" >nul 2>&1
+    if not errorlevel 1 (
+        echo ✅ 已创建全局符号链接: %GLOBAL_BIN_DIR%\figma-mcp-server.exe
+        echo     Global symlink created: %GLOBAL_BIN_DIR%\figma-mcp-server.exe
+        set "CREATED_SYMLINK=true"
+        goto :symlink_created
+    )
+)
+
+REM 尝试 C:\Windows\System32（需要管理员权限）
+set "GLOBAL_BIN_DIR=C:\Windows\System32"
+mklink "%GLOBAL_BIN_DIR%\figma-mcp-server.exe" "%VENV_BIN_DIR%\figma-mcp-server.exe" >nul 2>&1
+if not errorlevel 1 (
+    echo ✅ 已创建全局符号链接: %GLOBAL_BIN_DIR%\figma-mcp-server.exe
+    echo     Global symlink created: %GLOBAL_BIN_DIR%\figma-mcp-server.exe
+    set "CREATED_SYMLINK=true"
+    goto :symlink_created
+)
+
+REM 如果符号链接都失败，尝试复制文件
+echo ⚠️  无法创建符号链接，尝试复制文件
+echo     Cannot create symlink, trying to copy file...
+
+set "GLOBAL_BIN_DIR=%USERPROFILE%\AppData\Local\Microsoft\WinGet\Packages"
+copy "%VENV_BIN_DIR%\figma-mcp-server.exe" "%GLOBAL_BIN_DIR%\figma-mcp-server.exe" >nul 2>&1
+if not errorlevel 1 (
+    echo ✅ 已复制到全局目录: %GLOBAL_BIN_DIR%\figma-mcp-server.exe
+    echo     Copied to global directory: %GLOBAL_BIN_DIR%\figma-mcp-server.exe
+    set "CREATED_SYMLINK=true"
+    goto :symlink_created
+)
+
+echo ⚠️  无法创建全局符号链接，请手动配置
+echo     Failed to create global symlink, please configure manually
+echo     请将以下路径添加到系统 PATH:
+echo     Please add the following path to system PATH:
+echo     %VENV_BIN_DIR%
+
+:symlink_created
+
+REM 验证命令是否可用
+echo 🔍 验证命令可用性
+echo     Verifying command availability...
+figma-mcp-server --help >nul 2>&1
+if errorlevel 1 (
+    echo ⚠️  figma-mcp-server 命令在当前会话中不可用
+    echo     figma-mcp-server command is not available in current session
+    echo     请重新打开命令提示符或重启计算机
+    echo     Please reopen command prompt or restart computer
+) else (
+    echo ✅ figma-mcp-server 命令现在可以在任何地方使用
+    echo     figma-mcp-server command is now available everywhere
 )
 
 echo.
@@ -126,19 +181,36 @@ echo     Installation completed!
 echo.
 echo 📝 下一步操作：
 echo     Next steps:
-echo 1. 激活虚拟环境:
-echo     Activate virtual environment:
-echo    figma-mcp-env\Scripts\activate.bat
-echo.
-echo 2. 设置 Figma 访问令牌:
+echo 1. 设置 Figma 访问令牌:
 echo     Set Figma access token:
 echo    set FIGMA_ACCESS_TOKEN=your_token_here
 echo.
-echo 3. 测试安装:
+echo 2. 测试安装:
 echo     Test installation:
 echo    figma-mcp-server --help
 echo.
-echo 💡 提示: 每次使用前都需要激活虚拟环境
-echo     Tip: You need to activate virtual environment before each use
+echo 3. 使用 MCP 配置（可选）:
+echo     Use MCP configuration (optional):
+echo     在 Cursor 设置中添加以下配置:
+echo     Add the following configuration to Cursor settings:
+echo     {
+echo       "mcpServers": {
+echo         "figma-tools": {
+echo           "command": "figma-mcp-server",
+echo           "env": {
+echo             "FIGMA_ACCESS_TOKEN": "your_token_here"
+echo           }
+echo         }
+echo       }
+echo     }
+echo.
+echo 💡 重要提示:
+echo     Important notes:
+echo     - 如果命令在当前会话不可用，请重新打开命令提示符
+echo     - If command is not available in current session, reopen command prompt
+echo     - 或者重启计算机
+echo     - Or restart computer
+echo     - 虚拟环境已通过符号链接全局可用，无需手动激活
+echo     - Virtual environment is globally available via symlink, no manual activation needed
 echo.
 pause

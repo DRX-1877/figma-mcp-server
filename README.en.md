@@ -61,9 +61,11 @@ The installation scripts automatically perform the following operations:
 - ✅ Check Python version (requires 3.10+)
 - ✅ Create virtual environment
 - ✅ Install project dependencies
-- ✅ Configure PATH environment variable
-- ✅ Create global symbolic links (optional)
+- ✅ Configure PATH environment variable automatically
+- ✅ Create global symbolic links for global command access
+- ✅ Update shell configuration files (.zshrc, .bashrc)
 - ✅ Provide bilingual installation prompts (Chinese/English)
+- ✅ Verify command availability after installation
 
 **macOS/Linux:**
 ```bash
@@ -71,7 +73,7 @@ The installation scripts automatically perform the following operations:
 git clone https://github.com/DRX-1877/figma-mcp-server.git
 cd figma-mcp-server
 
-# Run installation script
+# Run installation script (automatically configures environment)
 ./install.sh
 ```
 
@@ -81,9 +83,13 @@ cd figma-mcp-server
 git clone https://github.com/DRX-1877/figma-mcp-server.git
 cd figma-mcp-server
 
-# Run installation script
+# Run installation script (automatically configures environment)
 install.bat
 ```
+
+**That's it!** The command will be available globally after installation.
+
+**就这么简单！** 安装后命令即可全局使用。
 
 ### Method 2: Manual Installation
 
@@ -104,6 +110,72 @@ pip install -e .
 
 ```bash
 pip install figma-mcp-server
+```
+
+## Global Command Availability
+
+After installation, the `figma-mcp-server` command will be available **globally** from any directory:
+
+### macOS/Linux
+```bash
+# Use from any directory
+figma-mcp-server --help
+
+# If command is not available, run the fix script
+./fix-command.sh
+
+# Or manually reload shell configuration
+source ~/.zshrc  # for zsh
+# or
+source ~/.bashrc # for bash
+```
+
+### Windows
+```cmd
+# Use from any directory
+figma-mcp-server --help
+
+# If command is not available, run the fix script
+fix-command.bat
+
+# Or reopen command prompt to reload environment variables
+```
+
+### Automatic Environment Configuration
+
+The installation script automatically configures your environment:
+
+- **PATH Configuration**: Adds virtual environment and local bin directories to PATH
+- **Global Symlinks**: Creates symbolic links in system directories
+- **Shell Integration**: Updates shell configuration files (.zshrc, .bashrc)
+
+**No manual configuration required!** 🎉
+
+### Troubleshooting
+
+If the command is not available after installation:
+
+#### macOS/Linux
+```bash
+# Option 1: Run the fix script
+./fix-command.sh
+
+# Option 2: Manually reload shell configuration
+source ~/.zshrc  # for zsh
+# or
+source ~/.bashrc # for bash
+
+# Option 3: Open a new terminal window
+```
+
+#### Windows
+```cmd
+# Option 1: Run the fix script
+fix-command.bat
+
+# Option 2: Reopen command prompt
+
+# Option 3: Restart computer
 ```
 
 ## Setup
@@ -138,7 +210,7 @@ Add to your MCP configuration file (e.g., `~/.cursor/mcp.json`):
 {
   "mcpServers": {
     "figma-tools": {
-      "command": "/path/to/your/figma-mcp-env/bin/figma-mcp-server",
+      "command": "figma-mcp-server",
       "env": {
         "FIGMA_ACCESS_TOKEN": "your_token_here"
       }
@@ -147,7 +219,7 @@ Add to your MCP configuration file (e.g., `~/.cursor/mcp.json`):
 }
 ```
 
-**Note:** Replace `/path/to/your/` with the actual path to your installation directory. If you used the installation scripts, the command should point to the `figma-mcp-env/bin/figma-mcp-server` executable.
+**Note:** If you used the installation scripts, the `figma-mcp-server` command is available globally, so you can use it directly without specifying the full path.
 
 ## Main Feature: Complete Node Data Extraction
 

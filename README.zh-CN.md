@@ -84,9 +84,11 @@ figma-mcp-server/
 - ✅ 检查 Python 版本（需要 3.10+）
 - ✅ 创建虚拟环境
 - ✅ 安装项目依赖
-- ✅ 配置 PATH 环境变量
-- ✅ 创建全局符号链接（可选）
+- ✅ 自动配置 PATH 环境变量
+- ✅ 创建全局符号链接以实现全局命令访问
+- ✅ 更新 shell 配置文件 (.zshrc, .bashrc)
 - ✅ 提供中英双语安装提示
+- ✅ 安装后验证命令可用性
 
 **macOS/Linux:**
 ```bash
@@ -104,9 +106,11 @@ cd figma-mcp-server
 git clone https://github.com/DRX-1877/figma-mcp-server.git
 cd figma-mcp-server
 
-# 运行安装脚本
+# 运行安装脚本（自动配置环境）
 install.bat
 ```
+
+**就这么简单！** 安装后命令即可全局使用。
 
 ### 方法二：手动安装
 
@@ -121,6 +125,72 @@ figma-mcp-env\Scripts\activate     # Windows
 2. 安装项目：
 ```bash
 pip install -e .
+```
+
+## 🌍 全局命令可用性
+
+安装完成后，`figma-mcp-server` 命令将在**任何目录**中全局可用：
+
+### macOS/Linux
+```bash
+# 在任何目录中使用
+figma-mcp-server --help
+
+# 如果命令不可用，运行修复脚本
+./fix-command.sh
+
+# 或手动重新加载 shell 配置
+source ~/.zshrc  # zsh
+# 或
+source ~/.bashrc # bash
+```
+
+### Windows
+```cmd
+# 在任何目录中使用
+figma-mcp-server --help
+
+# 如果命令不可用，运行修复脚本
+fix-command.bat
+
+# 或重新打开命令提示符以重新加载环境变量
+```
+
+### 🔧 自动环境配置
+
+安装脚本会自动配置您的环境：
+
+- **PATH 配置**: 自动将虚拟环境和本地 bin 目录添加到 PATH
+- **全局符号链接**: 在系统目录中创建符号链接
+- **Shell 集成**: 更新 shell 配置文件 (.zshrc, .bashrc)
+
+**无需手动配置！** 🎉
+
+### 🔍 故障排除
+
+如果安装后命令不可用：
+
+#### macOS/Linux
+```bash
+# 选项 1: 运行修复脚本
+./fix-command.sh
+
+# 选项 2: 手动重新加载 shell 配置
+source ~/.zshrc  # zsh
+# 或
+source ~/.bashrc # bash
+
+# 选项 3: 打开新的终端窗口
+```
+
+#### Windows
+```cmd
+# 选项 1: 运行修复脚本
+fix-command.bat
+
+# 选项 2: 重新打开命令提示符
+
+# 选项 3: 重启计算机
 ```
 
 ### 获取 Figma Access Token
@@ -169,7 +239,7 @@ figma-mcp-server
 {
   "mcpServers": {
     "figma-tools": {
-      "command": "/path/to/your/figma-mcp-env/bin/figma-mcp-server",
+      "command": "figma-mcp-server",
       "env": {
         "FIGMA_ACCESS_TOKEN": "your_token_here"
       }
@@ -178,7 +248,7 @@ figma-mcp-server
 }
 ```
 
-**注意：** 请将 `/path/to/your/` 替换为您的实际安装路径。如果您使用了安装脚本，命令应该指向 `figma-mcp-env/bin/figma-mcp-server` 可执行文件。
+**注意：** 如果您使用了安装脚本，`figma-mcp-server` 命令全局可用，因此可以直接使用而无需指定完整路径。
 
 ### 命令行使用
 
