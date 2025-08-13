@@ -28,18 +28,27 @@
 - **MCP服务器** - 提供MCP接口，供AI助手调用
 - **AI优化结构** - 专门为AI理解设计的输出格式
 
-## 文件结构
+## 项目结构
 
 ```
-├── figma_frame_extractor.py    # Frame节点提取器类
-├── figma_tree_extractor.py     # 树结构提取器类
-├── figma_image_extractor.py    # 图片提取器类
-├── figma_mcp_server.py         # MCP服务器
-├── get_complete_node_data.py   # 整合脚本（主要使用）
-├── start_mcp_server.sh         # MCP服务器启动脚本
-├── figma-mcp.json              # MCP配置文件
-├── requirements.txt            # 依赖文件
-└── pages/                      # 原始数据文件夹
+figma-mcp-server/
+├── figma_mcp_server/           # 核心包目录
+│   ├── __init__.py
+│   ├── server.py              # MCP服务器主文件
+│   ├── cli.py                 # 命令行接口
+│   ├── figma_frame_extractor.py    # Frame节点提取器
+│   ├── figma_tree_extractor.py     # 树结构提取器
+│   ├── figma_image_extractor.py    # 图片提取器
+│   └── figma_node_lister.py        # 节点列表工具
+├── install.sh                 # Linux/macOS 安装脚本
+├── install.bat                # Windows 安装脚本
+├── start.sh                   # 启动脚本
+├── debug_server_v3.py         # 调试服务器
+├── pyproject.toml             # 项目配置
+├── README.md                  # 中文说明文档
+├── README_PACKAGE.md          # 英文说明文档
+├── USAGE.md                   # 使用说明
+└── figma-mcp-env/             # 虚拟环境（安装后生成）
 ```
 
 ## 🚀 **开发者使用场景**
@@ -65,6 +74,14 @@
 ## 🚀 快速安装
 
 ### 方法一：使用安装脚本（推荐）
+
+安装脚本会自动完成以下操作：
+- ✅ 检查 Python 版本（需要 3.10+）
+- ✅ 创建虚拟环境
+- ✅ 安装项目依赖
+- ✅ 配置 PATH 环境变量
+- ✅ 创建全局符号链接（可选）
+- ✅ 提供中英双语安装提示
 
 **macOS/Linux:**
 ```bash
@@ -147,7 +164,7 @@ figma-mcp-server
 {
   "mcpServers": {
     "figma-tools": {
-      "command": "figma-mcp-env/bin/figma-mcp-server",
+      "command": "/path/to/your/figma-mcp-env/bin/figma-mcp-server",
       "env": {
         "FIGMA_ACCESS_TOKEN": "your_token_here"
       }
@@ -155,6 +172,8 @@ figma-mcp-server
   }
 }
 ```
+
+**注意：** 请将 `/path/to/your/` 替换为您的实际安装路径。如果您使用了安装脚本，命令应该指向 `figma-mcp-env/bin/figma-mcp-server` 可执行文件。
 
 ### 命令行使用
 

@@ -50,18 +50,55 @@ Instead of processing entire Figma files at once (which can be overwhelming), th
 
 ## Installation
 
-### From PyPI (Recommended)
+### Method 1: Using Installation Scripts (Recommended)
+
+The installation scripts automatically perform the following operations:
+- ✅ Check Python version (requires 3.10+)
+- ✅ Create virtual environment
+- ✅ Install project dependencies
+- ✅ Configure PATH environment variable
+- ✅ Create global symbolic links (optional)
+- ✅ Provide bilingual installation prompts (Chinese/English)
+
+**macOS/Linux:**
+```bash
+# Clone the repository
+git clone https://github.com/DRX-1877/figma-mcp-server.git
+cd figma-mcp-server
+
+# Run installation script
+./install.sh
+```
+
+**Windows:**
+```cmd
+# Clone the repository
+git clone https://github.com/DRX-1877/figma-mcp-server.git
+cd figma-mcp-server
+
+# Run installation script
+install.bat
+```
+
+### Method 2: Manual Installation
+
+1. Create and activate virtual environment:
+```bash
+python3 -m venv figma-mcp-env
+source figma-mcp-env/bin/activate  # macOS/Linux
+# or
+figma-mcp-env\Scripts\activate     # Windows
+```
+
+2. Install the project:
+```bash
+pip install -e .
+```
+
+### Method 3: From PyPI
 
 ```bash
 pip install figma-mcp-server
-```
-
-### From Source
-
-```bash
-git clone https://github.com/DRX-1877/figma-mcp-server.git
-cd figma-mcp-server
-pip install -e .
 ```
 
 ## Setup
@@ -96,7 +133,7 @@ Add to your MCP configuration file (e.g., `~/.cursor/mcp.json`):
 {
   "mcpServers": {
     "figma-tools": {
-      "command": "figma-mcp-server",
+      "command": "/path/to/your/figma-mcp-env/bin/figma-mcp-server",
       "env": {
         "FIGMA_ACCESS_TOKEN": "your_token_here"
       }
@@ -104,6 +141,8 @@ Add to your MCP configuration file (e.g., `~/.cursor/mcp.json`):
   }
 }
 ```
+
+**Note:** Replace `/path/to/your/` with the actual path to your installation directory. If you used the installation scripts, the command should point to the `figma-mcp-env/bin/figma-mcp-server` executable.
 
 ## Main Feature: Complete Node Data Extraction
 
