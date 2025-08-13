@@ -1,5 +1,7 @@
 # Figma MCP Server 项目总结
 
+> **English Version**: [PROJECT_SUMMARY_EN.md](PROJECT_SUMMARY_EN.md)
+
 ## 📁 项目结构
 
 ```
@@ -7,7 +9,8 @@ figma-mcp-server/
 ├── 📄 README.md                    # 项目主要文档
 ├── 📄 README_PACKAGE.md            # 详细的包说明文档
 ├── 📄 USAGE.md                     # 使用指南
-├── 📄 PROJECT_SUMMARY.md           # 项目总结（本文件）
+├── 📄 PROJECT_SUMMARY.md           # 项目总结（中文版）
+├── 📄 PROJECT_SUMMARY_EN.md        # 项目总结（英文版）
 ├── 📄 pyproject.toml               # 项目配置和依赖管理
 ├── 📄 MANIFEST.in                  # 打包配置
 ├── 📄 figma-mcp-package.json       # MCP 包配置

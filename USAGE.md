@@ -1,5 +1,7 @@
 # Figma MCP Server 使用指南
 
+> **English Version**: [USAGE_EN.md](USAGE_EN.md)
+
 ## 🚀 快速开始
 
 ### 1. 安装
