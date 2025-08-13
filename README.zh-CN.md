@@ -23,15 +23,70 @@
 - **包含视觉参考** - 高质量图片用于视觉验证
 - **维护上下文边界** - 每个页面都能舒适地适应AI上下文限制
 
+## 🎯 **主要功能：完整节点数据提取**
+
+### get_complete_node_data ⭐ **主要工具**
+获取Figma节点的完整数据（树结构+图片），并整理到文件夹
+
+**工作流程：**
+```mermaid
+graph TD
+    A[输入: file_key + node_ids] --> B[提取树结构]
+    B --> C[获取节点名称]
+    C --> D[下载图片]
+    D --> E[整理文件到文件夹]
+    E --> F[创建汇总信息]
+    F --> G[输出完整数据包]
+```
+
+- **参数**:
+  - `file_key`: Figma文件唯一标识符
+  - `node_ids`: 节点ID，逗号分隔
+  - `image_format`: 图片格式（默认：png）
+  - `image_scale`: 图片缩放因子（默认：1.0）
+  - `tree_depth`: 树深度（默认：4）
+
+**输出结构：**
+```
+your_node_name_your_node_id_here/
+├── nodesinfo.json    # 完整树结构数据（核心）
+└── your_node_id_here.png  # 下载的图片文件
+```
+
+### 🧠 **为什么这种结构适合 AI 理解**
+
+这个输出结构专门设计用于帮助 AI 全面理解设计：
+
+#### **多模态信息融合**
+- **结构化数据** (`nodesinfo.json`): 包含精确的定位、样式、约束和层次关系
+- **视觉数据** (`.png`): 提供实际渲染外观用于视觉验证
+- **上下文信息**: 文件命名和组织提供设计上下文
+
+#### **AI 友好设计**
+- **完整上下文**: AI 可以理解逻辑结构和视觉外观
+- **关系清晰**: 层次关系和约束被明确定义
+- **可解析格式**: JSON 结构允许 AI 轻松提取和处理信息
+
+#### **实际 AI 使用场景**
+- **设计分析**: "此页面有 12 个框架，18 个文本元素，使用白色背景..."
+- **代码生成**: "基于布局约束，生成宽度为 375px 的 React 组件..."
+- **设计建议**: "检测到 45 个节点，考虑组件化以减少复杂性..."
+- **响应式适配**: "头部使用 SCALE 约束，需要移动端布局调整..."
+
+#### **优化结构**
+- **仅包含必要**: 仅包含 AI 理解所需的最重要文件
+- **高效数据**: 紧凑的输出结构，同时保持所有必要信息
+- **成本效益**: 最小化 API 令牌使用，同时最大化 AI 理解
+
 ## 功能
 
-- ⭐ **页面级数据提取** - 按页面/组件提取完整的设计数据
-- **结构化节点信息** - 完整的设计层次、约束和样式数据
-- **视觉参考** - 每个页面/组件的高质量图片
-- **上下文感知处理** - 通过处理可管理的块来避免上下文溢出
-- **开发者友好输出** - 组织良好的文件夹，命名清晰
-- **MCP服务器** - 提供MCP接口，供AI助手调用
-- **AI优化结构** - 专门为AI理解设计的输出格式
+- 📋 **节点列表** (`list_nodes_depth2`) - 列出Figma文件中的所有节点，深度控制
+- 🔍 **树结构提取** (`extract_figma_tree`) - 提取Figma节点的完整树结构
+- 🖼️ **图片下载** (`download_figma_images`) - 下载Figma设计图片，支持多种格式（PNG、JPG、SVG、PDF）
+- 🔧 **完整数据导出** (`get_complete_node_data`) - 获取完整节点数据（树结构+图片），为AI理解而组织
+- 🖼️ **框架提取** (`extract_frame_nodes`) - 提取Figma文件中的Frame节点信息
+- 🌐 **跨平台支持** - 支持macOS、Linux和Windows
+- 💡 **AI优化结构** - 专门为AI理解设计的输出格式
 
 ## 项目结构
 
@@ -129,12 +184,12 @@ pip install -e .
 
 ## 🌍 全局命令可用性
 
-安装完成后，`figma-mcp-server` 命令将在**任何目录**中全局可用：
+安装完成后，`figma-mcp-tools` 命令将在**任何目录**中全局可用：
 
 ### macOS/Linux
 ```bash
 # 在任何目录中使用
-figma-mcp-server --help
+figma-mcp-tools --help
 
 # 如果命令不可用，运行修复脚本
 ./fix-command.sh
@@ -148,7 +203,7 @@ source ~/.bashrc # bash
 ### Windows
 ```cmd
 # 在任何目录中使用
-figma-mcp-server --help
+figma-mcp-tools --help
 
 # 如果命令不可用，运行修复脚本
 fix-command.bat
@@ -228,7 +283,7 @@ source figma-mcp-env/bin/activate  # macOS/Linux
 figma-mcp-env\Scripts\activate     # Windows
 
 # 启动服务器
-figma-mcp-server
+figma-mcp-tools
 ```
 
 ### MCP 配置（可选）
@@ -239,7 +294,7 @@ figma-mcp-server
 {
   "mcpServers": {
     "figma-tools": {
-      "command": "figma-mcp-server",
+      "command": "figma-mcp-tools",
       "env": {
         "FIGMA_ACCESS_TOKEN": "your_token_here"
       }
@@ -248,85 +303,20 @@ figma-mcp-server
 }
 ```
 
-**注意：** 如果您使用了安装脚本，`figma-mcp-server` 命令全局可用，因此可以直接使用而无需指定完整路径。
+**注意：** 如果您使用了安装脚本，`figma-mcp-tools` 命令全局可用，因此可以直接使用而无需指定完整路径。
 
 ### 命令行使用
 
 ```bash
 # 查看帮助
-figma-mcp-server --help
+figma-mcp-tools --help
 
 # 列出节点
-figma-mcp-server list-nodes your_file_key
+figma-mcp-tools list-nodes your_file_key
 
 # 提取完整数据
-figma-mcp-server extract your_file_key your_node_id
+figma-mcp-tools extract your_file_key your_node_id
 ```
-
-### 主要功能：完整节点数据提取
-
-### get_complete_node_data ⭐ **主要工具**
-获取Figma节点的完整数据（树结构+图片），并整理到文件夹
-
-⚠️ **重要提醒：API Token使用警告**
-- 完整节点数据提取会消耗大量API配额
-- 每个节点的完整信息可能包含数千个字段，数据量很大
-- 建议先使用 `list_nodes_depth2` 工具识别需要的节点
-- 这种两步式流程有助于最小化API成本和处理时间
-
-## 主要功能：完整节点数据提取
-
-### get_complete_node_data ⭐ **主要工具**
-获取Figma节点的完整数据（树结构+图片），并整理到文件夹
-
-⚠️ **重要提醒：API Token使用警告**
-- 完整节点数据提取会消耗大量API配额
-- 每个节点的完整信息可能包含数千个字段，数据量很大
-- 建议先使用 `list_nodes_depth2` 工具识别需要的节点
-- 这种两步式流程有助于最小化API成本和处理时间
-
-**工作流程：**
-```mermaid
-graph TD
-    A[输入: file_key + node_ids] --> B[提取树结构]
-    B --> C[获取节点名称]
-    C --> D[下载图片]
-    D --> E[整理文件到文件夹]
-    E --> F[创建汇总信息]
-    F --> G[输出完整数据包]
-```
-
-**输出结构：**
-```
-your_node_name_your_node_id_here/
-├── nodesinfo.json    # 节点详细信息（完整树结构，核心数据）
-└── your_node_id_here.png  # 图片文件
-```
-
-### 🧠 **为什么这样设计输出结构**
-
-这个输出结构专门为AI理解设计而设计：
-
-#### **多模态信息融合**
-- **结构化数据** (`nodesinfo.json`)：包含精确的位置、样式、约束和层次关系
-- **视觉数据** (`.png`)：提供实际渲染效果用于视觉验证
-- **上下文信息**：文件命名和组织提供设计上下文
-
-#### **AI友好的设计**
-- **完整上下文**：AI能同时理解逻辑结构和视觉外观
-- **关系清晰**：层次关系和约束被明确定义
-- **易于解析**：JSON结构让AI能轻松提取和处理信息
-
-#### **实际AI使用场景**
-- **设计分析**："这个页面有12个Frame，18个文本元素，使用白色背景..."
-- **代码生成**："基于布局约束，生成375px宽度的React组件..."
-- **设计建议**："检测到45个节点，建议组件化以减少复杂度..."
-- **响应式适配**："Header使用SCALE约束，需要移动端布局调整..."
-
-#### **优化结构**
-- **只保留核心**：包含AI理解设计所需的最重要文件
-- **高效数据**：紧凑的输出结构，同时保持所有必要信息
-- **成本效益**：最小化API token使用的同时最大化AI理解能力
 
 ## 单独调用工具
 

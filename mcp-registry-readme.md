@@ -4,11 +4,11 @@ A Model Context Protocol (MCP) server for Figma integration that provides seamle
 
 ## Features
 
-- 🔍 **File Access**: Browse and search Figma files
-- 🖼️ **Image Export**: Extract images from Figma designs
-- 📋 **Component Management**: Access and manage Figma components
-- 💬 **Comments**: Read and post comments on Figma designs
-- 🔧 **Design Tokens**: Extract design tokens and styles
+- 📋 **Node Listing** (`list_nodes_depth2`): List all nodes in Figma files with depth control
+- 🔍 **Tree Structure Extraction** (`extract_figma_tree`): Extract complete tree structure of Figma nodes
+- 🖼️ **Image Download** (`download_figma_images`): Download images from Figma designs in multiple formats (PNG, JPG, SVG, PDF)
+- 🔧 **Complete Data Export** (`get_complete_node_data`): Get complete node data (tree + images) organized for AI understanding
+- 🖼️ **Frame Extraction** (`extract_frame_nodes`): Extract Frame node information from Figma files
 - 🌐 **Cross-platform**: Works on macOS, Linux, and Windows
 
 ## Quick Start
@@ -40,10 +40,11 @@ pip install figma-mcp-tools
 ### Usage
 
 Once configured, you can use commands like:
-- "Show me the latest designs in my Figma project"
-- "Extract all images from this Figma file"
-- "What components are available in this design system?"
-- "Add a comment to this design"
+- "Extract the tree structure of this Figma file"
+- "Download all images from these nodes as PNG"
+- "List all Frame nodes in this design file"
+- "Get complete data for these components including images"
+- "Show me all nodes in this Figma file"
 
 ## Requirements
 

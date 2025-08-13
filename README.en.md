@@ -23,14 +23,69 @@ Instead of processing entire Figma files at once (which can be overwhelming), th
 - **Includes visual references** - High-quality images for visual verification
 - **Maintains context boundaries** - Each page fits comfortably within AI context limits
 
+## 🎯 **Main Feature: Complete Node Data Extraction**
+
+### get_complete_node_data ⭐ **Primary Tool**
+Get complete node data (tree structure + images) and organize into folders
+
+**Workflow:**
+```mermaid
+graph TD
+    A[Input: file_key + node_ids] --> B[Extract Tree Structure]
+    B --> C[Get Node Names]
+    C --> D[Download Images]
+    D --> E[Organize Files to Folder]
+    E --> F[Create Summary Info]
+    F --> G[Output Complete Data Package]
+```
+
+- **Parameters**:
+  - `file_key`: Figma file unique identifier
+  - `node_ids`: Node IDs, comma-separated
+  - `image_format`: Image format (default: png)
+  - `image_scale`: Image scale factor (default: 1.0)
+  - `tree_depth`: Tree depth (default: 4)
+
+**Output Structure:**
+```
+your_node_name_your_node_id_here/
+├── nodesinfo.json    # Complete tree structure data (core)
+└── your_node_id_here.png  # Downloaded image file
+```
+
+### 🧠 **Why This Structure for AI Understanding**
+
+This output structure is specifically designed to help AI understand design comprehensively:
+
+#### **Multi-modal Information Fusion**
+- **Structured Data** (`nodesinfo.json`): Contains precise positioning, styling, constraints, and hierarchical relationships
+- **Visual Data** (`.png`): Provides actual rendered appearance for visual verification
+- **Contextual Information**: File naming and organization provide design context
+
+#### **AI-Friendly Design**
+- **Complete Context**: AI can understand both the logical structure and visual appearance
+- **Relationship Clarity**: Hierarchical relationships and constraints are explicitly defined
+- **Parseable Format**: JSON structure allows AI to easily extract and process information
+
+#### **Real-world AI Use Cases**
+- **Design Analysis**: "This page has 12 frames, 18 text elements, uses white background..."
+- **Code Generation**: "Based on layout constraints, generate React component with 375px width..."
+- **Design Suggestions**: "45 nodes detected, consider componentization to reduce complexity..."
+- **Responsive Adaptation**: "Header uses SCALE constraint, needs mobile layout adjustment..."
+
+#### **Optimized Structure**
+- **Essential Only**: Contains only the most important files for AI understanding
+- **Efficient Data**: Compact output structure while maintaining all necessary information
+- **Cost Effective**: Minimizes API token usage while maximizing AI understanding
+
 ## Features
 
-- ⭐ **Page-Level Data Extraction** - Extract complete design data organized by pages/components
-- 🔍 **Structured Node Information** - Complete design hierarchy, constraints, and styling data
-- 🖼️ **Visual References** - High-quality images for each page/component
-- 📊 **Context-Aware Processing** - Avoid context overflow by processing manageable chunks
-- 📁 **Developer-Friendly Output** - Organized folders with clear naming conventions
-- 🔧 **MCP Integration** - Seamless integration with MCP-compatible AI assistants
+- 📋 **Node Listing** (`list_nodes_depth2`) - List all nodes in Figma files with depth control
+- 🔍 **Tree Structure Extraction** (`extract_figma_tree`) - Extract complete tree structure of Figma nodes
+- 🖼️ **Image Download** (`download_figma_images`) - Download images from Figma designs in multiple formats (PNG, JPG, SVG, PDF)
+- 🔧 **Complete Data Export** (`get_complete_node_data`) - Get complete node data (tree + images) organized for AI understanding
+- 🖼️ **Frame Extraction** (`extract_frame_nodes`) - Extract Frame node information from Figma files
+- 🌐 **Cross-platform** - Works on macOS, Linux, and Windows
 - 💡 **AI-Optimized Structure** - Output format designed specifically for AI understanding
 
 ## 🚀 **Use Cases for Developers**
@@ -199,7 +254,7 @@ fix-command.bat
 ### Command Line
 
 ```bash
-figma-mcp-server
+figma-mcp-tools
 ```
 
 ### MCP Configuration
@@ -210,7 +265,7 @@ Add to your MCP configuration file (e.g., `~/.cursor/mcp.json`):
 {
   "mcpServers": {
     "figma-tools": {
-      "command": "figma-mcp-server",
+      "command": "figma-mcp-tools",
       "env": {
         "FIGMA_ACCESS_TOKEN": "your_token_here"
       }
@@ -219,62 +274,7 @@ Add to your MCP configuration file (e.g., `~/.cursor/mcp.json`):
 }
 ```
 
-**Note:** If you used the installation scripts, the `figma-mcp-server` command is available globally, so you can use it directly without specifying the full path.
-
-## Main Feature: Complete Node Data Extraction
-
-### get_complete_node_data ⭐ **Primary Tool**
-Get complete node data (tree structure + images) and organize into folders
-
-**Workflow:**
-```mermaid
-graph TD
-    A[Input: file_key + node_ids] --> B[Extract Tree Structure]
-    B --> C[Get Node Names]
-    C --> D[Download Images]
-    D --> E[Organize Files to Folder]
-    E --> F[Create Summary Info]
-    F --> G[Output Complete Data Package]
-```
-
-- **Parameters**:
-  - `file_key`: Figma file unique identifier
-  - `node_ids`: Node IDs, comma-separated
-  - `image_format`: Image format (default: png)
-  - `image_scale`: Image scale factor (default: 1.0)
-  - `tree_depth`: Tree depth (default: 4)
-
-**Output Structure:**
-```
-your_node_name_your_node_id_here/
-├── nodesinfo.json    # Complete tree structure data (core)
-└── your_node_id_here.png  # Downloaded image file
-```
-
-### 🧠 **Why This Structure for AI Understanding**
-
-This output structure is specifically designed to help AI understand design comprehensively:
-
-#### **Multi-modal Information Fusion**
-- **Structured Data** (`nodesinfo.json`): Contains precise positioning, styling, constraints, and hierarchical relationships
-- **Visual Data** (`.png`): Provides actual rendered appearance for visual verification
-- **Contextual Information**: File naming and organization provide design context
-
-#### **AI-Friendly Design**
-- **Complete Context**: AI can understand both the logical structure and visual appearance
-- **Relationship Clarity**: Hierarchical relationships and constraints are explicitly defined
-- **Parseable Format**: JSON structure allows AI to easily extract and process information
-
-#### **Real-world AI Use Cases**
-- **Design Analysis**: "This page has 12 frames, 18 text elements, uses white background..."
-- **Code Generation**: "Based on layout constraints, generate React component with 375px width..."
-- **Design Suggestions**: "45 nodes detected, consider componentization to reduce complexity..."
-- **Responsive Adaptation**: "Header uses SCALE constraint, needs mobile layout adjustment..."
-
-#### **Optimized Structure**
-- **Essential Only**: Contains only the most important files for AI understanding
-- **Efficient Data**: Compact output structure while maintaining all necessary information
-- **Cost Effective**: Minimizes API token usage while maximizing AI understanding
+**Note:** If you used the installation scripts, the `figma-mcp-tools` command is available globally, so you can use it directly without specifying the full path.
 
 ## Individual Process Tools
 
