@@ -21,7 +21,7 @@ pip install figma-mcp-server
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/figma-mcp-server.git
+git clone https://github.com/DRX-1877/figma-mcp-server.git
 cd figma-mcp-server
 pip install -e .
 ```
@@ -105,14 +105,14 @@ Extract Frame node information from Figma files
 # Example: Extract tree structure
 {
   "file_key": "your_figma_file_key_here",
-  "node_ids": "1:498",
+  "node_ids": "your_node_id_here",
   "depth": 4
 }
 
 # Example: Download images
 {
   "file_key": "your_figma_file_key_here",
-  "node_ids": "1:498",
+  "node_ids": "your_node_id_here",
   "format": "png",
   "scale": 2.0
 }
@@ -123,7 +123,7 @@ Extract Frame node information from Figma files
 ### Setup Development Environment
 
 ```bash
-git clone https://github.com/yourusername/figma-mcp-server.git
+git clone https://github.com/DRX-1877/figma-mcp-server.git
 cd figma-mcp-server
 pip install -e ".[dev]"
 ```
@@ -154,9 +154,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- 📖 [Documentation](https://github.com/yourusername/figma-mcp-server#readme)
-- 🐛 [Bug Reports](https://github.com/yourusername/figma-mcp-server/issues)
-- 💬 [Discussions](https://github.com/yourusername/figma-mcp-server/discussions)
+- 📖 [Documentation](https://github.com/DRX-1877/figma-mcp-server#readme)
+- 🐛 [Bug Reports](https://github.com/DRX-1877/figma-mcp-server/issues)
+- 💬 [Discussions](https://github.com/DRX-1877/figma-mcp-server/discussions)
 
 ## Changelog
 

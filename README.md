@@ -56,13 +56,13 @@ export FIGMA_ACCESS_TOKEN='your_token_here'
 2. 运行整合脚本：
 ```bash
 # 基本用法
-python3 get_complete_node_data.py your_figma_file_key_here 1:498
+python3 get_complete_node_data.py your_figma_file_key_here your_node_id_here
 
 # 指定图片格式和缩放
-python3 get_complete_node_data.py your_figma_file_key_here 1:498 png 2
+python3 get_complete_node_data.py your_figma_file_key_here your_node_id_here png 2
 
 # 获取多个节点
-python3 get_complete_node_data.py your_figma_file_key_here 1:498,1:703 png 1
+python3 get_complete_node_data.py your_figma_file_key_here your_node_id_here,your_second_node_id_here png 1
 ```
 
 ### 单独使用各个类
@@ -72,10 +72,10 @@ python3 get_complete_node_data.py your_figma_file_key_here 1:498,1:703 png 1
 python3 figma_frame_extractor.py your_figma_file_key_here
 
 # 提取树结构
-python3 figma_tree_extractor.py your_figma_file_key_here 1:498
+python3 figma_tree_extractor.py your_figma_file_key_here your_node_id_here
 
 # 下载图片
-python3 figma_image_extractor.py your_figma_file_key_here 1:498 png 1
+python3 figma_image_extractor.py your_figma_file_key_here your_node_id_here png 1
 ```
 
 ### MCP服务器使用
@@ -102,7 +102,7 @@ python3 figma_image_extractor.py your_figma_file_key_here 1:498 png 1
 ```
 === Figma 完整节点数据获取器 ===
 文件Key: your_figma_file_key_here
-节点IDs: 1:498
+节点IDs: your_node_id_here
 图片格式: png
 缩放比例: 1.0
 
@@ -112,32 +112,32 @@ python3 figma_image_extractor.py your_figma_file_key_here 1:498 png 1
 步骤4: 创建汇总信息...
 
 === 完成 ===
-所有文件已整理到文件夹: 首页_1:498
+所有文件已整理到文件夹: your_node_name_your_node_id_here
 包含文件:
   - nodesinfo.json (节点详细信息)
   - nodesstatus.json (节点统计信息)
   - image.json (图片信息)
   - summary.json (汇总信息)
-  - 图片文件: 1:498.png
+  - 图片文件: your_node_id_here.png
 ```
 
 ## 输出文件结构
 
 生成的文件夹结构：
 ```
-首页_1:498/
+your_node_name_your_node_id_here/
 ├── nodesinfo.json    # 节点详细信息（完整树结构）
 ├── nodesstatus.json  # 节点统计信息（各类型节点数量）
 ├── image.json        # 图片信息（下载链接、状态等）
 ├── summary.json      # 汇总信息
-└── 1:498.png        # 图片文件
+└── your_node_id_here.png        # 图片文件
 ```
 
 ## 参数说明
 
 ### get_complete_node_data.py 参数
 - `file_key` - Figma文件唯一标识符（必需）
-- `node_ids` - 节点ID，多个用逗号分隔（可选，默认1:498）
+- `node_ids` - 节点ID，多个用逗号分隔（可选，默认your_node_id_here）
 - `format` - 图片格式：png, jpg, svg, pdf（可选，默认png）
 - `scale` - 缩放比例：0.01-4（可选，默认1.0）
 
