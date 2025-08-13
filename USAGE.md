@@ -67,7 +67,7 @@ figma-mcp-server extract your_figma_file_key your_node_id --format svg
 {
   "mcpServers": {
     "figma-tools": {
-      "command": "/path/to/figma-mcp-server/figma-mcp-env/bin/figma-mcp-server",
+      "command": "figma-mcp-server",
       "env": {
         "FIGMA_ACCESS_TOKEN": "your_token_here"
       }
@@ -79,7 +79,7 @@ figma-mcp-server extract your_figma_file_key your_node_id --format svg
 ### 其他 MCP 客户端
 
 配置命令：
-- **命令**: `figma-mcp-env/bin/figma-mcp-server`
+- **命令**: `figma-mcp-server`
 - **环境变量**: `FIGMA_ACCESS_TOKEN=your_token_here`
 
 ## 🛠️ 故障排除

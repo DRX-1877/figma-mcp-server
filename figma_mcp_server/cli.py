@@ -28,15 +28,9 @@ def main():
     try:
         asyncio.run(server_main())
     except KeyboardInterrupt:
-        try:
-            print("\n服务器已停止")
-        except:
-            pass
+        print("\n服务器已停止")
     except Exception as e:
-        try:
-            print(f"启动失败: {e}")
-        except:
-            pass
+        print(f"启动失败: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

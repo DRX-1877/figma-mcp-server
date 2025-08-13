@@ -64,6 +64,21 @@ if errorlevel 1 (
 )
 echo ✅ MCP 依赖检查通过
 
+REM 配置 PATH 环境变量
+echo 🔧 配置 PATH 环境变量...
+set "SCRIPT_DIR=%~dp0"
+set "VENV_BIN_DIR=%SCRIPT_DIR%figma-mcp-env\Scripts"
+
+REM 检查是否已经添加到 PATH
+echo %PATH% | findstr /i "figma-mcp-env" >nul
+if errorlevel 1 (
+    REM 添加到用户 PATH
+    setx PATH "%PATH%;%VENV_BIN_DIR%"
+    echo ✅ 已添加到系统 PATH
+) else (
+    echo ✅ PATH 已配置
+)
+
 echo.
 echo 🎉 安装完成！
 echo.

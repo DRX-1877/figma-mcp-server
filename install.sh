@@ -77,6 +77,44 @@ else
     exit 1
 fi
 
+# 配置 PATH 环境变量
+echo "🔧 配置 PATH 环境变量..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_BIN_DIR="$SCRIPT_DIR/figma-mcp-env/bin"
+
+# 检测 shell 类型
+SHELL_CONFIG=""
+if [[ "$SHELL" == *"zsh"* ]]; then
+    SHELL_CONFIG="$HOME/.zshrc"
+elif [[ "$SHELL" == *"bash"* ]]; then
+    SHELL_CONFIG="$HOME/.bashrc"
+    if [ ! -f "$SHELL_CONFIG" ]; then
+        SHELL_CONFIG="$HOME/.bash_profile"
+    fi
+else
+    echo "⚠️  无法检测 shell 类型，请手动配置 PATH"
+    SHELL_CONFIG=""
+fi
+
+if [ -n "$SHELL_CONFIG" ]; then
+    # 检查是否已经添加过
+    if ! grep -q "figma-mcp-env/bin" "$SHELL_CONFIG" 2>/dev/null; then
+        echo "" >> "$SHELL_CONFIG"
+        echo "# Figma MCP Server PATH" >> "$SHELL_CONFIG"
+        echo "export PATH=\"$VENV_BIN_DIR:\$PATH\"" >> "$SHELL_CONFIG"
+        echo "✅ 已添加到 $SHELL_CONFIG"
+    else
+        echo "✅ PATH 已配置"
+    fi
+    
+    # 为当前会话设置 PATH
+    export PATH="$VENV_BIN_DIR:$PATH"
+    echo "✅ 当前会话 PATH 已更新"
+else
+    echo "⚠️  请手动将以下路径添加到您的 PATH:"
+    echo "   export PATH=\"$VENV_BIN_DIR:\$PATH\""
+fi
+
 echo ""
 echo "🎉 安装完成！"
 echo ""
@@ -95,7 +133,7 @@ echo "   将以下配置添加到 ~/.cursor/mcp.json:"
 echo "   {"
 echo "     \"mcpServers\": {"
 echo "       \"figma-tools\": {"
-echo "         \"command\": \"figma-mcp-env/bin/figma-mcp-server\","
+echo "         \"command\": \"figma-mcp-server\","
 echo "         \"env\": {"
 echo "           \"FIGMA_ACCESS_TOKEN\": \"your_token_here\""
 echo "         }"
