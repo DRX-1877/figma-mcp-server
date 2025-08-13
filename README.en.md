@@ -106,20 +106,20 @@ figma-mcp-env\Scripts\activate     # Windows
 pip install -e .
 ```
 
-### Method 3: From PyPI
+### Method 3: From PyPI (Recommended)
 
 ```bash
-pip install figma-mcp-server
+pip install figma-mcp-tools
 ```
 
 ## Global Command Availability
 
-After installation, the `figma-mcp-server` command will be available **globally** from any directory:
+After installation, the `figma-mcp-tools` command will be available **globally** from any directory:
 
 ### macOS/Linux
 ```bash
 # Use from any directory
-figma-mcp-server --help
+figma-mcp-tools --help
 
 # If command is not available, run the fix script
 ./fix-command.sh
@@ -133,7 +133,7 @@ source ~/.bashrc # for bash
 ### Windows
 ```cmd
 # Use from any directory
-figma-mcp-server --help
+figma-mcp-tools --help
 
 # If command is not available, run the fix script
 fix-command.bat

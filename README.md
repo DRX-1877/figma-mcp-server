@@ -33,6 +33,12 @@ A specialized MCP server designed for **developers** to systematically extract a
 
 ### 🛠️ Quick Installation / 快速安装
 
+#### Option 1: Install from PyPI (Recommended) / 从 PyPI 安装（推荐）
+```bash
+pip install figma-mcp-tools
+```
+
+#### Option 2: Install from source / 从源码安装
 ```bash
 # Clone the repository
 git clone https://github.com/DRX-1877/figma-mcp-server.git
@@ -50,14 +56,14 @@ install.bat   # Windows
 
 ### 🌍 Global Command Availability / 全局命令可用性
 
-After installation, the `figma-mcp-server` command will be available **globally** from any directory:
+After installation, the `figma-mcp-tools` command will be available **globally** from any directory:
 
-安装完成后，`figma-mcp-server` 命令将在**任何目录**中全局可用：
+安装完成后，`figma-mcp-tools` 命令将在**任何目录**中全局可用：
 
 #### macOS/Linux
 ```bash
 # Use from any directory
-figma-mcp-server --help
+figma-mcp-tools --help
 
 # If command is not available, run the fix script
 ./fix-command.sh
@@ -71,7 +77,7 @@ source ~/.bashrc # for bash
 #### Windows
 ```cmd
 # Use from any directory
-figma-mcp-server --help
+figma-mcp-tools --help
 
 # If command is not available, run the fix script
 fix-command.bat
