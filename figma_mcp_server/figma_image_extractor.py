@@ -168,9 +168,9 @@ def main():
     # 检查命令行参数
     if len(sys.argv) < 2:
         print("使用方法: python3 figma_image_extractor.py <file_key> [node_ids] [format] [scale]")
-        print("示例: python3 figma_image_extractor.py 5F45MIt6BVWBIZCEkA0do3")
-        print("示例: python3 figma_image_extractor.py 5F45MIt6BVWBIZCEkA0do3 1:498")
-        print("示例: python3 figma_image_extractor.py 5F45MIt6BVWBIZCEkA0do3 1:498,1:703 png 2")
+        print("示例: python3 figma_image_extractor.py your_figma_file_key_here")
+        print("示例: python3 figma_image_extractor.py your_figma_file_key_here your_node_id_here")
+        print("示例: python3 figma_image_extractor.py your_figma_file_key_here your_node_id_here png 2")
         print("\n格式选项: jpg, png, svg, pdf")
         print("缩放选项: 0.01-4 (默认1)")
         print("\n请确保设置了环境变量 FIGMA_ACCESS_TOKEN")
@@ -178,11 +178,14 @@ def main():
     
     file_key = sys.argv[1]
     
-    # 如果没有提供node_ids，使用默认的首页框架
+    # 检查是否提供了node_ids
     if len(sys.argv) > 2:
         node_ids = sys.argv[2]
     else:
-        node_ids = "1:498"  # 默认获取首页框架
+        print("错误: 请提供节点ID")
+        print("使用方法: python3 figma_image_extractor.py <file_key> <node_ids> [format] [scale]")
+        print("提示: 使用 list_nodes_depth2 工具获取节点ID")
+        sys.exit(1)
     
     # 获取格式参数
     image_format = "png"  # 默认格式

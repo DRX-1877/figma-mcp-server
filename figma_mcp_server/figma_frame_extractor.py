@@ -218,7 +218,7 @@ def main():
     # 检查命令行参数
     if len(sys.argv) != 2:
         print("使用方法: python3 figma_frame_extractor.py <file_key>")
-        print("示例: python3 figma_frame_extractor.py 5F45MIt6BVWBIZCEkA0do3")
+        print("示例: python3 figma_frame_extractor.py your_figma_file_key_here")
         print("\n请确保设置了环境变量 FIGMA_ACCESS_TOKEN")
         sys.exit(1)
     
