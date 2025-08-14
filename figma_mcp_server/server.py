@@ -313,15 +313,24 @@ async def handle_extract_tree(arguments: Dict[str, Any]) -> list[TextContent]:
     
     # Save to file
     output_file = f"specific_nodes_{file_key}.json"
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
-    
-    return [
-        TextContent(
-            type="text", 
-            text=f"✅ Tree structure extraction successful!\n\nFile: {output_file}\nTotal nodes: {result['analysis']['total_nodes']}\nNode type statistics: {json.dumps(result['analysis']['node_counts'], ensure_ascii=False, indent=2)}"
-        )
-    ]
+    try:
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(result, f, indent=2, ensure_ascii=False)
+        output_path = os.path.abspath(output_file)
+        return [
+            TextContent(
+                type="text", 
+                text=f"✅ Tree structure extraction successful!\n\n📁 File: {output_path}\n📊 Total nodes: {result['analysis']['total_nodes']}\n📋 Node type statistics: {json.dumps(result['analysis']['node_counts'], ensure_ascii=False, indent=2)}"
+            )
+        ]
+    except Exception as e:
+        logger.error(f"Failed to save file: {e}")
+        return [
+            TextContent(
+                type="text", 
+                text=f"⚠️ Tree structure extraction completed but file generation failed!\n\n📊 Total nodes: {result['analysis']['total_nodes']}\n📋 Node type statistics: {json.dumps(result['analysis']['node_counts'], ensure_ascii=False, indent=2)}\n\nError: {str(e)}"
+            )
+        ]
 
 async def handle_download_images(arguments: Dict[str, Any]) -> list[TextContent]:
     """Handle image download"""
@@ -402,22 +411,32 @@ async def handle_extract_frames(arguments: Dict[str, Any]) -> list[TextContent]:
     
     # Save detailed result to file
     output_file = f"detailed_frame_info_{file_key}.json"
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
+    try:
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(result, f, indent=2, ensure_ascii=False)
+        output_path = os.path.abspath(output_file)
+    except Exception as e:
+        logger.error(f"Failed to save detailed frame file: {e}")
+        output_path = "failed_to_save"
     
     # Save simplified frame IDs to file
     simple_output_file = f"frame_ids_{file_key}.json"
-    with open(simple_output_file, 'w', encoding='utf-8') as f:
-        json.dump({
-            "file_key": file_key,
-            "frame_ids": frame_ids,
-            "count": len(frame_ids)
-        }, f, indent=2, ensure_ascii=False)
+    try:
+        with open(simple_output_file, 'w', encoding='utf-8') as f:
+            json.dump({
+                "file_key": file_key,
+                "frame_ids": frame_ids,
+                "count": len(frame_ids)
+            }, f, indent=2, ensure_ascii=False)
+        simple_output_path = os.path.abspath(simple_output_file)
+    except Exception as e:
+        logger.error(f"Failed to save simple frame file: {e}")
+        simple_output_path = "failed_to_save"
     
     return [
         TextContent(
             type="text", 
-            text=f"✅ Frame node extraction successful!\n\nFound {frame_count} Frame nodes (depth={max_depth}):\n" + "\n".join([f"- {page['pageInfo']['name']} (ID: {page['pageInfo']['frameId']})" for page in result["pages"]]) + f"\n\n📁 Detailed result saved to: {output_file}\n📁 Simplified result saved to: {simple_output_file}"
+            text=f"✅ Frame node extraction successful!\n\n📋 Found {frame_count} Frame nodes (depth={max_depth}):\n" + "\n".join([f"- {page['pageInfo']['name']} (ID: {page['pageInfo']['frameId']})" for page in result["pages"]]) + f"\n\n📁 Detailed result saved to: {output_path}\n📁 Simplified result saved to: {simple_output_path}"
         )
     ]
 
@@ -436,19 +455,29 @@ async def handle_list_nodes(arguments: Dict[str, Any]) -> list[TextContent]:
     
     # Save detailed result to file
     output_file = f"node_list_{file_key}.json"
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
+    try:
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(result, f, indent=2, ensure_ascii=False)
+        output_path = os.path.abspath(output_file)
+    except Exception as e:
+        logger.error(f"Failed to save detailed node list file: {e}")
+        output_path = "failed_to_save"
     
     # Save simplified node IDs to file
     node_ids = [node["id"] for node in result["node_list"]]
     simple_output_file = f"node_ids_{file_key}.json"
-    with open(simple_output_file, 'w', encoding='utf-8') as f:
-        json.dump({
-            "file_key": file_key,
-            "node_ids": node_ids,
-            "count": len(node_ids),
-            "max_depth": 2
-        }, f, indent=2, ensure_ascii=False)
+    try:
+        with open(simple_output_file, 'w', encoding='utf-8') as f:
+            json.dump({
+                "file_key": file_key,
+                "node_ids": node_ids,
+                "count": len(node_ids),
+                "max_depth": 2
+            }, f, indent=2, ensure_ascii=False)
+        simple_output_path = os.path.abspath(simple_output_file)
+    except Exception as e:
+        logger.error(f"Failed to save simple node list file: {e}")
+        simple_output_path = "failed_to_save"
     
     # Build output text
     output_lines = [f"✅ Node list retrieval successful!\n"]
@@ -467,8 +496,8 @@ async def handle_list_nodes(arguments: Dict[str, Any]) -> list[TextContent]:
             indent = "  " * node["depth"]
             output_lines.append(f"{indent}- {node['name']} (ID: {node['id']})")
     
-    output_lines.append(f"\n📁 Detailed result saved to: {output_file}")
-    output_lines.append(f"📁 Simplified result saved to: {simple_output_file}")
+    output_lines.append(f"\n📁 Detailed result saved to: {output_path}")
+    output_lines.append(f"📁 Simplified result saved to: {simple_output_path}")
     
     return [
         TextContent(
