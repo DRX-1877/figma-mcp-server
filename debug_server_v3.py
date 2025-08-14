@@ -145,7 +145,7 @@ async def main():
     print(f"✅ Figma 访问令牌已设置: {access_token[:10]}...{access_token[-4:]}")
     
     # 获取服务器命令路径
-    server_command = "figma-mcp-server"
+    server_command = "figma-mcp-tools"
     
     try:
         result = subprocess.run(["which", server_command], capture_output=True, text=True)

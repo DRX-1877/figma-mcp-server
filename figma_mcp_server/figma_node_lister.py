@@ -9,6 +9,7 @@ import requests
 import json
 import os
 from typing import List, Dict, Any
+from .file_saver import FigmaFileSaver
 
 class FigmaNodeLister:
     def __init__(self, access_token: str = None):
@@ -16,6 +17,7 @@ class FigmaNodeLister:
         self.access_token = access_token or os.getenv("FIGMA_ACCESS_TOKEN")
         if not self.access_token:
             raise ValueError("需要提供 access_token 或设置环境变量 FIGMA_ACCESS_TOKEN")
+        self.file_saver = FigmaFileSaver()
     
     def get_figma_file(self, file_key: str) -> Dict[str, Any]:
         """获取Figma文件信息"""
@@ -149,25 +151,13 @@ def main():
         result = lister.list_nodes(file_key, node_types, max_depth)
         
         if result:
-            # 保存到文件
-            output_file = f"node_list_{file_key}.json"
-            with open(output_file, 'w', encoding='utf-8') as f:
-                json.dump(result, f, indent=2, ensure_ascii=False)
+            # 使用文件保存器保存节点列表
+            save_result = self.file_saver.save_node_list(file_key, result, max_depth)
+            detailed_path = save_result["detailed_path"]
+            simple_path = save_result["simple_path"]
             
-            print(f"\n详细结果已保存到: {output_file}")
-            
-            # 同时保存简化的节点ID列表
-            node_ids = [node["id"] for node in result["node_list"]]
-            simple_output_file = f"node_ids_{file_key}.json"
-            with open(simple_output_file, 'w', encoding='utf-8') as f:
-                json.dump({
-                    "file_key": file_key,
-                    "node_ids": node_ids,
-                    "count": len(node_ids),
-                    "max_depth": max_depth
-                }, f, indent=2, ensure_ascii=False)
-            
-            print(f"简化结果已保存到: {simple_output_file}")
+            print(f"\n详细结果已保存到: {detailed_path}")
+            print(f"简化结果已保存到: {simple_path}")
     
     except ValueError as e:
         print(f"错误: {e}")

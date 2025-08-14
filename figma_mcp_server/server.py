@@ -25,6 +25,7 @@ from .figma_tree_extractor import FigmaTreeExtractor
 from .figma_image_extractor import FigmaImageExtractor
 from .figma_frame_extractor import FigmaFrameExtractor
 from .figma_node_lister import FigmaNodeLister
+from .file_saver import FigmaFileSaver
 
 # MCP相关导入
 try:
@@ -188,6 +189,7 @@ class FigmaMCPServer:
         self.image_extractor = FigmaImageExtractor(self.access_token) if self.access_token else None
         self.frame_extractor = FigmaFrameExtractor(self.access_token) if self.access_token else None
         self.node_lister = FigmaNodeLister(self.access_token) if self.access_token else None
+        self.file_saver = FigmaFileSaver()
     
     def setup_environment(self):
         """Setup environment, including virtual environment path"""
@@ -311,20 +313,19 @@ async def handle_extract_tree(arguments: Dict[str, Any]) -> list[TextContent]:
     if not result:
         return [TextContent(type="text", text="Failed to extract tree structure")]
     
-    # Save to file
-    output_file = f"specific_nodes_{file_key}.json"
+    # 使用文件保存器保存树结构
     try:
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
-        output_path = os.path.abspath(output_file)
+        save_result = figma_server.file_saver.save_tree_structure(file_key, result, node_ids)
+        tree_path = save_result["tree_path"]
+        stats_path = save_result["stats_path"]
         return [
             TextContent(
                 type="text", 
-                text=f"✅ Tree structure extraction successful!\n\n📁 File: {output_path}\n📊 Total nodes: {result['analysis']['total_nodes']}\n📋 Node type statistics: {json.dumps(result['analysis']['node_counts'], ensure_ascii=False, indent=2)}"
+                text=f"✅ Tree structure extraction successful!\n\n📁 Tree file: {tree_path}\n📊 Stats file: {stats_path}\n📊 Total nodes: {result['analysis']['total_nodes']}\n📋 Node type statistics: {json.dumps(result['analysis']['node_counts'], ensure_ascii=False, indent=2)}"
             )
         ]
     except Exception as e:
-        logger.error(f"Failed to save file: {e}")
+        logger.error(f"Failed to save tree files: {e}")
         return [
             TextContent(
                 type="text", 
@@ -407,30 +408,15 @@ async def handle_extract_frames(arguments: Dict[str, Any]) -> list[TextContent]:
         return [TextContent(type="text", text="Failed to extract Frame nodes")]
     
     frame_count = len(result["pages"])
-    frame_ids = [page["pageInfo"]["frameId"] for page in result["pages"]]
     
-    # Save detailed result to file
-    output_file = f"detailed_frame_info_{file_key}.json"
+    # 使用文件保存器保存Frame信息
     try:
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
-        output_path = os.path.abspath(output_file)
+        save_result = figma_server.file_saver.save_frame_info(file_key, result, max_depth)
+        output_path = save_result["detailed_path"]
+        simple_output_path = save_result["simple_path"]
     except Exception as e:
-        logger.error(f"Failed to save detailed frame file: {e}")
+        logger.error(f"Failed to save frame files: {e}")
         output_path = "failed_to_save"
-    
-    # Save simplified frame IDs to file
-    simple_output_file = f"frame_ids_{file_key}.json"
-    try:
-        with open(simple_output_file, 'w', encoding='utf-8') as f:
-            json.dump({
-                "file_key": file_key,
-                "frame_ids": frame_ids,
-                "count": len(frame_ids)
-            }, f, indent=2, ensure_ascii=False)
-        simple_output_path = os.path.abspath(simple_output_file)
-    except Exception as e:
-        logger.error(f"Failed to save simple frame file: {e}")
         simple_output_path = "failed_to_save"
     
     return [
@@ -453,30 +439,14 @@ async def handle_list_nodes(arguments: Dict[str, Any]) -> list[TextContent]:
     if not result:
         return [TextContent(type="text", text="Failed to get node list")]
     
-    # Save detailed result to file
-    output_file = f"node_list_{file_key}.json"
+    # 使用文件保存器保存节点列表
     try:
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
-        output_path = os.path.abspath(output_file)
+        save_result = figma_server.file_saver.save_node_list(file_key, result, 2)
+        output_path = save_result["detailed_path"]
+        simple_output_path = save_result["simple_path"]
     except Exception as e:
-        logger.error(f"Failed to save detailed node list file: {e}")
+        logger.error(f"Failed to save node list files: {e}")
         output_path = "failed_to_save"
-    
-    # Save simplified node IDs to file
-    node_ids = [node["id"] for node in result["node_list"]]
-    simple_output_file = f"node_ids_{file_key}.json"
-    try:
-        with open(simple_output_file, 'w', encoding='utf-8') as f:
-            json.dump({
-                "file_key": file_key,
-                "node_ids": node_ids,
-                "count": len(node_ids),
-                "max_depth": 2
-            }, f, indent=2, ensure_ascii=False)
-        simple_output_path = os.path.abspath(simple_output_file)
-    except Exception as e:
-        logger.error(f"Failed to save simple node list file: {e}")
         simple_output_path = "failed_to_save"
     
     # Build output text

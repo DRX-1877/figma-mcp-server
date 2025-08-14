@@ -9,6 +9,7 @@ import requests
 import json
 import os
 from typing import Dict, Any
+from .file_saver import FigmaFileSaver
 
 class FigmaImageExtractor:
     def __init__(self, access_token: str = None):
@@ -16,6 +17,7 @@ class FigmaImageExtractor:
         self.access_token = access_token or os.getenv("FIGMA_ACCESS_TOKEN")
         if not self.access_token:
             raise ValueError("需要提供 access_token 或设置环境变量 FIGMA_ACCESS_TOKEN")
+        self.file_saver = FigmaFileSaver()
     
     def get_figma_images(self, file_key: str, node_ids: str, **kwargs) -> Dict[str, Any]:
         """获取Figma图片"""
@@ -97,11 +99,6 @@ class FigmaImageExtractor:
         
         print(f"\n找到 {len(images)} 个图片:")
         
-        # 创建输出目录
-        if not output_dir:
-            output_dir = f"images_{file_key}"
-        os.makedirs(output_dir, exist_ok=True)
-        
         # 保存图片信息
         result = {
             "file_key": file_key,
@@ -116,10 +113,15 @@ class FigmaImageExtractor:
         
         success_count = 0
         
+        # 使用文件保存器创建输出目录并保存图片信息
+        save_result = self.file_saver.save_images_info(file_key, result)
+        output_dir = save_result["output_dir"]
+        info_path = save_result["info_path"]
+        
         for node_id, image_url in images.items():
             if image_url:
                 # 生成文件名
-                filename = f"{output_dir}/{node_id}.{format}"
+                filename = os.path.join(output_dir, f"{node_id}.{format}")
                 
                 print(f"\n下载图片: {node_id}")
                 print(f"  URL: {image_url}")
@@ -131,8 +133,8 @@ class FigmaImageExtractor:
                     success_count += 1
                     
                     # 获取文件大小
-                    file_size = os.path.getsize(filename)
-                    print(f"  文件大小: {file_size / 1024:.1f} KB")
+                    file_size = self.file_saver.get_file_size(filename)
+                    print(f"  文件大小: {file_size:.1f} KB")
                 else:
                     print(f"  ❌ 下载失败")
                 
@@ -149,15 +151,10 @@ class FigmaImageExtractor:
                     "status": "failed"
                 }
         
-        # 保存图片信息到JSON文件
-        info_file = f"{output_dir}/images_info.json"
-        with open(info_file, 'w', encoding='utf-8') as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
-        
         print(f"\n=== 下载完成 ===")
         print(f"成功下载: {success_count}/{len(images)} 个图片")
         print(f"图片保存在: {output_dir}/")
-        print(f"图片信息保存在: {info_file}")
+        print(f"图片信息保存在: {info_path}")
         
         return result
 

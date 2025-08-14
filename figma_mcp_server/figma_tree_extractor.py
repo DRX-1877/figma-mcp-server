@@ -9,6 +9,7 @@ import requests
 import json
 import os
 from typing import List, Dict, Any
+from .file_saver import FigmaFileSaver
 
 class FigmaTreeExtractor:
     def __init__(self, access_token: str = None):
@@ -16,6 +17,7 @@ class FigmaTreeExtractor:
         self.access_token = access_token or os.getenv("FIGMA_ACCESS_TOKEN")
         if not self.access_token:
             raise ValueError("需要提供 access_token 或设置环境变量 FIGMA_ACCESS_TOKEN")
+        self.file_saver = FigmaFileSaver()
     
     def get_specific_nodes(self, file_key: str, node_ids: str, depth: int = 4) -> Dict[str, Any]:
         """获取特定节点信息"""
@@ -222,27 +224,14 @@ def main():
         result = extractor.extract_tree(file_key, node_ids)
         
         if result:
-            # 保存完整结果
-            output_file = f"specific_nodes_{file_key}.json"
-            with open(output_file, 'w', encoding='utf-8') as f:
-                json.dump(result, f, indent=2, ensure_ascii=False)
+            # 使用文件保存器保存树结构
+            save_result = self.file_saver.save_tree_structure(file_key, result, node_ids)
+            tree_path = save_result["tree_path"]
+            stats_path = save_result["stats_path"]
             
-            print(f"\n特定节点树结构已保存到: {output_file}")
-            print(f"文件大小: {os.path.getsize(output_file) / 1024:.1f} KB")
-            
-            # 保存简化统计结果
-            stats_file = f"specific_nodes_stats_{file_key}.json"
-            with open(stats_file, 'w', encoding='utf-8') as f:
-                json.dump({
-                    "file_key": file_key,
-                    "file_name": result.get("file_name", ""),
-                    "target_nodes": node_ids,
-                    "total_nodes": result["analysis"]["total_nodes"],
-                    "node_counts": result["analysis"]["node_counts"],
-                    "max_depth": result["analysis"]["max_depth"]
-                }, f, indent=2, ensure_ascii=False)
-            
-            print(f"统计信息已保存到: {stats_file}")
+            print(f"\n特定节点树结构已保存到: {tree_path}")
+            print(f"文件大小: {self.file_saver.get_file_size(tree_path):.1f} KB")
+            print(f"统计信息已保存到: {stats_path}")
     
     except ValueError as e:
         print(f"错误: {e}")

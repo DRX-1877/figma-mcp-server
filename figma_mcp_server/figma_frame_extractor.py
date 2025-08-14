@@ -9,6 +9,7 @@ import requests
 import json
 import os
 from typing import List, Dict, Any
+from .file_saver import FigmaFileSaver
 
 class FigmaFrameExtractor:
     def __init__(self, access_token: str = None):
@@ -16,6 +17,7 @@ class FigmaFrameExtractor:
         self.access_token = access_token or os.getenv("FIGMA_ACCESS_TOKEN")
         if not self.access_token:
             raise ValueError("需要提供 access_token 或设置环境变量 FIGMA_ACCESS_TOKEN")
+        self.file_saver = FigmaFileSaver()
     
     def get_figma_file(self, file_key: str) -> Dict[str, Any]:
         """获取Figma文件信息"""
@@ -229,24 +231,13 @@ def main():
         result = extractor.extract_frames(file_key)
         
         if result:
-            # 保存到文件
-            output_file = f"detailed_frame_info_{file_key}.json"
-            with open(output_file, 'w', encoding='utf-8') as f:
-                json.dump(result, f, indent=2, ensure_ascii=False)
+            # 使用文件保存器保存Frame信息
+            save_result = self.file_saver.save_frame_info(file_key, result, max_depth)
+            detailed_path = save_result["detailed_path"]
+            simple_path = save_result["simple_path"]
             
-            print(f"\n详细结果已保存到: {output_file}")
-            
-            # 同时保存简化的frame id列表
-            frame_ids = [node["pageInfo"]["frameId"] for node in result["pages"]]
-            simple_output_file = f"frame_ids_{file_key}.json"
-            with open(simple_output_file, 'w', encoding='utf-8') as f:
-                json.dump({
-                    "file_key": file_key,
-                    "frame_ids": frame_ids,
-                    "count": len(frame_ids)
-                }, f, indent=2, ensure_ascii=False)
-            
-            print(f"简化结果已保存到: {simple_output_file}")
+            print(f"\n详细结果已保存到: {detailed_path}")
+            print(f"简化结果已保存到: {simple_path}")
     
     except ValueError as e:
         print(f"错误: {e}")
